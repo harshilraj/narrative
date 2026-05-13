@@ -1,9 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
-import dynamic from "next/dynamic";
-
-
 
 export default function Hero() {
   const contentRef = useRef<HTMLDivElement>(null);

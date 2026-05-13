@@ -1,9 +1,9 @@
 "use client";
 import { useRef, useMemo, useEffect } from "react";
+import type { MutableRefObject } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
-const LAYER_COUNT = 3;
 const PARTICLES_PER_LAYER = [1500, 1000, 500]; // BG, MID, FG
 const SIZES = [0.03, 0.05, 0.08];
 const OPACITIES = [0.2, 0.4, 0.7];
@@ -109,7 +109,7 @@ function FlowLayer({ layerIndex }: { layerIndex: number }) {
   return <points ref={pointsRef} geometry={geometry} material={material} />;
 }
 
-function Scene({ mouseRef }: { mouseRef: React.MutableRefObject<[number, number]> }) {
+function Scene({ mouseRef }: { mouseRef: MutableRefObject<[number, number]> }) {
   const groupRef = useRef<THREE.Group>(null);
   
   useFrame(() => {

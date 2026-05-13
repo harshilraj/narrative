@@ -2,6 +2,18 @@
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 
+type Particle = {
+  x: number;
+  y: number;
+  originX: number;
+  originY: number;
+  targetX: number;
+  targetY: number;
+  size: number;
+  opacity: number;
+  speed: number;
+};
+
 export default function Loader({ onComplete }: { onComplete: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -13,14 +25,14 @@ export default function Loader({ onComplete }: { onComplete: () => void }) {
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
 
-    let w = window.innerWidth;
-    let h = window.innerHeight;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
     canvas.width = w * window.devicePixelRatio;
     canvas.height = h * window.devicePixelRatio;
     ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
 
     const count = 120;
-    const particles: any[] = [];
+    const particles: Particle[] = [];
     
     // Initialize scattered particles
     for (let i = 0; i < count; i++) {
