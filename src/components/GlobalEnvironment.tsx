@@ -57,8 +57,8 @@ function InfrastructureGrid({ progress }: { progress: number }) {
     const size = 60;
     const step = 1.2;
     const pos = [];
-    for (float x = -size; x <= size; x += step) {
-      for (float y = -size; y <= size; y += step) {
+    for (let x = -size; x <= size; x += step) {
+      for (let y = -size; y <= size; y += step) {
         pos.push(x, y, 0);
       }
     }
