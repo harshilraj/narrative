@@ -3,122 +3,140 @@ import { useEffect, useRef, useState, useMemo } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
 
-// ── CUSTOM SHADER: CONTEXTUAL INFRASTRUCTURE ───────────────────────────────
-// This shader evolves its visual logic based on the scroll progress (uProgress).
-// 0.0 - 0.2: (Hero) Scattered, calm grid.
-// 0.2 - 0.5: (Architecture) Grid organizes and becomes more 3D.
-// 0.5 - 0.8: (Process/LiveOps) Intelligence pulses accelerate and brighten.
-// 0.8 - 1.0: (Case Studies) Stable, complex data topology.
-const vertexShader = `
+// ── CONCEPT: THE INVISIBLE LOOM ──────────────────────────────────────────
+// Represents Narrative AI as a vast, ethereal tapestry of intelligence.
+// Instead of hard grids or particles, we use fine "Data Threads" and 
+// volumetric "Intelligence Shards" that drift in a digital void.
+
+// 1. DATA THREADS SHADER
+const threadVertexShader = `
   uniform float uTime;
   uniform float uProgress;
+  attribute float aSize;
   varying float vOpacity;
-  varying float vPulse;
 
   void main() {
     vec3 pos = position;
 
-    // 1. Contextual Distortion Logic
-    float distToCenter = length(pos.xy);
-    
-    // Wave height increases as we move into architecture/process sections
-    float waveIntensity = 0.5 + uProgress * 2.5;
-    float wave = sin(pos.x * 0.15 + pos.y * 0.1 + uTime * 0.4) * waveIntensity;
-    
-    // In the "Process" section (around 0.6), create a "Routing Vortex" effect
-    float vortexProgress = smoothstep(0.4, 0.7, uProgress) * (1.0 - smoothstep(0.7, 0.9, uProgress));
-    float angle = vortexProgress * 2.0 * atan(pos.y, pos.x);
-    pos.z += wave + sin(angle + uTime) * vortexProgress * 5.0;
+    // Slow, drifting woven motion
+    pos.x += sin(uTime * 0.2 + pos.y * 0.1) * 2.0;
+    pos.z += cos(uTime * 0.1 + pos.x * 0.1) * 1.5;
 
-    // 2. Pulse logic for signals
-    float pulse = sin(uTime * 2.0 + pos.x * 0.5 + pos.y * 0.5) * 0.5 + 0.5;
-    vPulse = pulse * uProgress;
+    // Vertical drift based on scroll
+    pos.y += uProgress * 25.0;
 
-    // 3. Perspective & Scroll Drift
-    pos.y += uProgress * 18.0; // Vertical drift
-    
     vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
     
-    // Fade out based on distance and scroll (more focus in early sections)
-    float distanceFade = smoothstep(5.0, 30.0, length(mvPosition.xyz));
-    vOpacity = distanceFade * (0.3 + uProgress * 0.4);
+    // Threads are very fine and fade into the distance
+    vOpacity = smoothstep(-50.0, -5.0, mvPosition.z) * 0.2;
     
-    // Size evolution: signals get bigger as system "activates"
-    float sizeBase = 1.0 + pulse * uProgress * 2.0;
-    gl_PointSize = sizeBase * (300.0 / -mvPosition.z);
-    
+    gl_PointSize = aSize * (300.0 / -mvPosition.z);
     gl_Position = projectionMatrix * mvPosition;
   }
 `;
 
-const fragmentShader = `
+const threadFragmentShader = `
   varying float vOpacity;
-  varying float vPulse;
   uniform vec3 uColor;
-  uniform vec3 uPulseColor;
 
   void main() {
-    float dist = distance(gl_PointCoord, vec2(0.5));
-    if (dist > 0.5) discard;
+    // Sharp, line-like particles
+    float dist = distance(gl_PointCoord, vec2(0.5, 0.5));
+    if (dist > 0.45) discard;
     
-    // Blend base color with pulse color based on uProgress
-    vec3 color = mix(uColor, uPulseColor, vPulse * 0.5);
-    
-    float alpha = smoothstep(0.5, 0.2, dist) * vOpacity;
-    gl_FragColor = vec4(color, alpha);
+    gl_FragColor = vec4(uColor, vOpacity);
   }
 `;
 
-function ContextualGrid({ progress }: { progress: number }) {
+// 2. INTELLIGENCE SHARDS (Volumetric Light)
+const shardVertexShader = `
+  varying vec2 vUv;
+  uniform float uProgress;
+  void main() {
+    vUv = uv;
+    vec3 pos = position;
+    pos.y += uProgress * 10.0;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+  }
+`;
+
+const shardFragmentShader = `
+  varying vec2 vUv;
+  uniform float uTime;
+  uniform vec3 uColor;
+
+  void main() {
+    float strength = distance(vUv, vec2(0.5));
+    strength = 1.0 - strength;
+    strength = pow(strength, 4.0);
+
+    // Flickering, ethereal light
+    float flicker = sin(uTime * 0.5) * 0.1 + 0.9;
+    
+    gl_FragColor = vec4(uColor, strength * flicker * 0.15);
+  }
+`;
+
+function InvisibleLoom({ progress }: { progress: number }) {
   const pointsRef = useRef<THREE.Points>(null);
+  const shardsRef = useRef<THREE.Group>(null);
+  const count = 12000;
   
-  const { positions, count } = useMemo(() => {
-    const size = 70;
-    const step = 1.4;
-    const pos = [];
-    for (let x = -size; x <= size; x += step) {
-      for (let y = -size; y <= size; y += step) {
-        pos.push(x, y, 0);
-      }
+  const { positions, sizes } = useMemo(() => {
+    const pos = new Float32Array(count * 3);
+    const sz = new Float32Array(count);
+    for (let i = 0; i < count; i++) {
+      pos[i * 3] = (Math.random() - 0.5) * 100;
+      pos[i * 3 + 1] = (Math.random() - 0.5) * 80;
+      pos[i * 3 + 2] = (Math.random() - 0.5) * 40 - 10;
+      sz[i] = Math.random() * 0.8 + 0.1; // Extremely fine
     }
-    return { 
-      positions: new Float32Array(pos), 
-      count: pos.length / 3 
-    };
+    return { positions: pos, sizes: sz };
   }, []);
 
   const uniforms = useMemo(() => ({
     uTime: { value: 0 },
     uProgress: { value: 0 },
-    uColor: { value: new THREE.Color("#4F46E5") },
-    uPulseColor: { value: new THREE.Color("#8B6CF0") }
+    uColor: { value: new THREE.Color("#EEF2F8") },
+    uShardColor: { value: new THREE.Color("#4F46E5") }
   }), []);
 
   useFrame((state) => {
-    if (!pointsRef.current) return;
+    if (!pointsRef.current || !shardsRef.current) return;
     uniforms.uTime.value = state.clock.elapsedTime;
-    uniforms.uProgress.value = THREE.MathUtils.lerp(uniforms.uProgress.value, progress, 0.04);
+    uniforms.uProgress.value = THREE.MathUtils.lerp(uniforms.uProgress.value, progress, 0.05);
+
+    shardsRef.current.rotation.z = state.clock.elapsedTime * 0.05;
   });
 
   return (
-    <points ref={pointsRef}>
-      <bufferGeometry>
-        <bufferAttribute 
-          attach="attributes-position" 
-          count={count} 
-          array={positions} 
-          itemSize={3} 
+    <group>
+      {/* 1. Fine Data Threads */}
+      <points ref={pointsRef}>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
+          <bufferAttribute attach="attributes-aSize" count={count} array={sizes} itemSize={1} />
+        </bufferGeometry>
+        <shaderMaterial 
+          transparent depthWrite={false} blending={THREE.AdditiveBlending}
+          vertexShader={threadVertexShader} fragmentShader={threadFragmentShader} uniforms={uniforms}
         />
-      </bufferGeometry>
-      <shaderMaterial 
-        transparent
-        depthWrite={false}
-        blending={THREE.AdditiveBlending}
-        vertexShader={vertexShader}
-        fragmentShader={fragmentShader}
-        uniforms={uniforms}
-      />
-    </points>
+      </points>
+
+      {/* 2. Intelligence Shards */}
+      <group ref={shardsRef}>
+        {[...Array(5)].map((_, i) => (
+          <mesh key={i} position={[(i - 2) * 15, 0, -15]} rotation={[0, 0, i * 0.5]}>
+            <planeGeometry args={[10, 40]} />
+            <shaderMaterial 
+              transparent depthWrite={false} blending={THREE.AdditiveBlending}
+              vertexShader={shardVertexShader} fragmentShader={shardFragmentShader}
+              uniforms={{ uTime: uniforms.uTime, uProgress: uniforms.uProgress, uColor: uniforms.uShardColor }}
+            />
+          </mesh>
+        ))}
+      </group>
+    </group>
   );
 }
 
@@ -139,26 +157,26 @@ export default function GlobalEnvironment() {
   return (
     <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#020408]">
       
-      {/* 1. Contextual Intelligence Layer */}
+      {/* 3D Invisible Loom Layer */}
       <div className="absolute inset-0 z-0">
-        <Canvas camera={{ position: [0, -12, 28], fov: 40, rotation: [0.5, 0, 0] }}>
-          <fog attach="fog" args={["#020408", 15, 45]} />
-          <ContextualGrid progress={progress} />
+        <Canvas camera={{ position: [0, 0, 30], fov: 45 }}>
+          <fog attach="fog" args={["#020408", 15, 50]} />
+          <InvisibleLoom progress={progress} />
         </Canvas>
       </div>
 
-      {/* 2. Intelligent Fog Overlay - subtle color shift based on scroll */}
-      <div className="absolute inset-0 z-10 pointer-events-none transition-colors duration-1000"
+      {/* 2. Deep Atmospheric Shield */}
+      <div className="absolute inset-0 z-10 pointer-events-none" 
         style={{ 
-          background: `radial-gradient(circle at center, rgba(2,4,8,${0.2 + progress * 0.2}) 0%, rgba(2,4,8,0.95) 100%)`,
-          mixBlendMode: "multiply"
+          background: `radial-gradient(circle at 50% 50%, rgba(2,4,8,0.1) 0%, rgba(2,4,8,0.98) 100%)`,
         }} 
       />
 
-      {/* 3. Operational Glow - bottom-up lighting that intensifies with scroll */}
-      <div className="absolute inset-0 z-20 pointer-events-none"
+      {/* 3. Subtle Lens Flare / Signal Bursts */}
+      <div className="absolute inset-0 z-20 pointer-events-none opacity-20"
         style={{ 
-          background: `radial-gradient(ellipse at bottom, rgba(139,108,240,${0.02 + progress * 0.08}) 0%, transparent 70%)` 
+          background: `radial-gradient(circle at 20% 30%, rgba(79,70,229,0.15) 0%, transparent 40%),
+                       radial-gradient(circle at 80% 70%, rgba(139,108,240,0.1) 0%, transparent 40%)` 
         }} 
       />
 
