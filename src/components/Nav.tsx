@@ -5,7 +5,7 @@ export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 60);
+    const onScroll = () => setScrolled(window.scrollY > 80);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -14,9 +14,10 @@ export default function Nav() {
     <nav
       className="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
       style={{
-        background: scrolled ? "rgba(5,10,10,0.62)" : "rgba(5,10,10,0.08)",
-        backdropFilter: "blur(14px)",
+        background: scrolled ? "rgba(2, 6, 14, 0.85)" : "transparent",
+        backdropFilter: scrolled ? "blur(20px)" : "none",
         borderBottom: scrolled ? "1px solid rgba(255,255,255,0.06)" : "1px solid transparent",
+        transition: "all 0.4s ease",
         padding: scrolled ? "14px 0" : "22px 0",
       }}
     >
@@ -42,7 +43,19 @@ export default function Nav() {
           ))}
         </div>
 
-        <a href="#contact" className="btn-primary hidden md:inline-flex" style={{ padding: "10px 24px", fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "'DM Mono', monospace" }}>
+        <a
+          href="#contact"
+          className="btn-primary hidden md:inline-flex"
+          style={{
+            padding: "10px 20px",
+            fontSize: "12px",
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
+            fontFamily: "'DM Mono', monospace",
+            background: scrolled ? "rgba(255,255,255,0.95)" : "#ffffff",
+            boxShadow: scrolled ? "0 4px 20px rgba(0,0,0,0.3)" : undefined,
+          }}
+        >
           GET STARTED
         </a>
 

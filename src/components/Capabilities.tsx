@@ -173,7 +173,7 @@ export default function Capabilities() {
                 />
 
                 <div
-                  className="relative backdrop-blur-sm rounded-2xl p-8 border transition-all duration-500 hover:border-white/10"
+                  className="glass-card relative"
                   style={{
                     background: `linear-gradient(135deg, rgba(255,255,255,0.025) 0%, rgba(255,255,255,0.01) 100%)`,
                     border: `1px solid rgba(255,255,255,0.05)`,
@@ -202,9 +202,9 @@ export default function Capabilities() {
                     </div>
 
                     {/* Routing indicator */}
-                    <div className="flex-shrink-0 flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/5">
-                      <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: layer.accent }} />
-                      <span className="t-mono text-[9px] uppercase tracking-widest" style={{ color: layer.accent, opacity: 0.7 }}>
+                    <div className="active-badge flex-shrink-0">
+                      <div className="pulse-dot" />
+                      <span className="t-mono uppercase tracking-widest">
                         ACTIVE
                       </span>
                     </div>
@@ -219,7 +219,7 @@ export default function Capabilities() {
                     {layer.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="t-mono px-3 py-1.5 rounded-md text-white/50"
+                        className="tag-chip t-mono"
                         style={{
                           fontSize: "11px",
                           background: `${layer.accent}08`,

@@ -216,7 +216,7 @@ export default function CaseStudies() {
 
               {/* Architecture Diagram */}
               <div className={`lg:col-span-7 ${idx % 2 === 1 ? "lg:order-last" : ""} case-reveal`}>
-                <div className="relative rounded-2xl overflow-hidden shadow-2xl"
+                <div className="glass-card relative overflow-hidden"
                   style={{ background: "#030408", border: "1px solid rgba(255,255,255,0.08)", aspectRatio: "500/360" }}>
                   {study.diagram}
                   {/* Bottom label */}
@@ -233,7 +233,7 @@ export default function CaseStudies() {
                 <div className="case-reveal">
                   <div className="t-label mb-4 opacity-50 uppercase tracking-widest">{study.industry}</div>
                   <h3 className="t-h3 mb-6 font-serif" style={{ fontSize: "2rem", lineHeight: 1.1 }}>{study.client}</h3>
-                  <div className="p-6 rounded-xl bg-white/[0.02] border border-white/5 backdrop-blur-sm">
+                  <div className="glass-card">
                     <div className="t-label mb-3 opacity-60">Challenge</div>
                     <p className="t-body opacity-80" style={{ fontSize: "1rem", lineHeight: 1.6 }}>{study.challenge}</p>
                   </div>
@@ -255,8 +255,8 @@ export default function CaseStudies() {
                   <div className="t-label mb-5" style={{ color: "var(--success)" }}>Operational Impact</div>
                   <div className="grid grid-cols-1 gap-4">
                     {study.impact.map((item, i) => (
-                      <div key={i} className="flex items-center gap-4 p-4 rounded-lg bg-emerald-400/[0.03] border border-emerald-400/10">
-                        <div className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                      <div key={i} className="glass-card flex items-center gap-4">
+                        <div className="pulse-dot flex-shrink-0" />
                         <span className="t-body font-medium text-[0.95rem] text-emerald-50/90">{item}</span>
                       </div>
                     ))}

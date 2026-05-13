@@ -1,324 +1,440 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { MutableRefObject, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 
-type GraphNode = {
-  id: number;
-  position: THREE.Vector3;
-  offset: number;
-};
+type ScrollRef = MutableRefObject<number>;
 
-type GraphEdge = {
-  from: number;
-  to: number;
-};
+const STAR_COUNT = 800;
+const CLUSTER_COUNT = 5;
+const DUST_PER_CLUSTER = 120;
+const CONSTELLATION_COUNT = 45;
+const SHAPE_DURATION = 12;
 
-type Pulse = {
-  from: number;
-  to: number;
-  start: number;
-  duration: number;
-  slot: number;
-};
+const pointVertexShader = `
+  attribute float aSize;
+  attribute float aAlpha;
+  attribute float aTwinkle;
+  varying vec3 vColor;
+  varying float vAlpha;
+  uniform float uTime;
+  uniform float uPixelRatio;
+  uniform float uTwinkleStrength;
 
-const NODE_COUNT = 55;
-const ACTIVE_COUNT = 18;
-const EDGE_MIN_DISTANCE = 5;
-const EDGE_MAX_DISTANCE = 9;
-const MAX_PULSES = 6;
-const ACTIVE_COLOR = new THREE.Color("#00FFB2");
-const DIM_COLOR = new THREE.Color("#c7d0cf");
-const LINE_COLOR = new THREE.Color("#ffffff");
+  void main() {
+    vColor = color;
+    float twinkle = 0.5 + 0.5 * sin(uTime * aTwinkle + aTwinkle * 4.7);
+    vAlpha = aAlpha * mix(1.0, twinkle, uTwinkleStrength);
+
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+    gl_PointSize = aSize * uPixelRatio * (300.0 / -mvPosition.z);
+    gl_Position = projectionMatrix * mvPosition;
+  }
+`;
+
+const pointFragmentShader = `
+  varying vec3 vColor;
+  varying float vAlpha;
+
+  void main() {
+    float dist = distance(gl_PointCoord, vec2(0.5));
+    float alpha = smoothstep(0.5, 0.0, dist) * vAlpha;
+    gl_FragColor = vec4(vColor, alpha);
+  }
+`;
 
 function noise(index: number, salt: number) {
   return Math.abs(Math.sin(index * 12.9898 + salt * 78.233) * 43758.5453) % 1;
 }
 
-function makeGraph() {
-  const nodes: GraphNode[] = Array.from({ length: NODE_COUNT }, (_, id) => {
-    const angle = noise(id, 1) * Math.PI * 2;
-    const radius = 8 + noise(id, 2) * 10;
-    const x = Math.cos(angle) * radius + (noise(id, 3) - 0.5) * 4;
-    const y = Math.sin(angle) * radius * 0.6 + (noise(id, 4) - 0.5) * 3;
-    const z = (noise(id, 5) - 0.5) * 6;
+function gaussian(index: number, salt: number) {
+  const u = Math.max(0.0001, noise(index, salt));
+  const v = Math.max(0.0001, noise(index, salt + 11));
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
 
-    return {
-      id,
-      position: new THREE.Vector3(x, y, z),
-      offset: noise(id, 6) * Math.PI * 2,
-    };
+function createPointMaterial(twinkleStrength: number) {
+  return new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    vertexColors: true,
+    blending: THREE.AdditiveBlending,
+    uniforms: {
+      uTime: { value: 0 },
+      uPixelRatio: { value: 1 },
+      uTwinkleStrength: { value: twinkleStrength },
+    },
+    vertexShader: pointVertexShader,
+    fragmentShader: pointFragmentShader,
+  });
+}
+
+function StarField({ scrollRef }: { scrollRef: ScrollRef }) {
+  const pointsRef = useRef<THREE.Points>(null);
+  const materialRef = useRef<THREE.ShaderMaterial>(null);
+
+  const geometry = useMemo(() => {
+    const positions = new Float32Array(STAR_COUNT * 3);
+    const colors = new Float32Array(STAR_COUNT * 3);
+    const sizes = new Float32Array(STAR_COUNT);
+    const alphas = new Float32Array(STAR_COUNT);
+    const twinkles = new Float32Array(STAR_COUNT);
+
+    for (let i = 0; i < STAR_COUNT; i++) {
+      positions[i * 3] = (noise(i, 1) - 0.5) * 70;
+      positions[i * 3 + 1] = (noise(i, 2) - 0.5) * 50;
+      positions[i * 3 + 2] = -5 - noise(i, 3) * 10;
+      colors.set([1, 1, 1], i * 3);
+      sizes[i] = 0.012 + noise(i, 4) * 0.013;
+      alphas[i] = 0.3 + noise(i, 5) * 0.4;
+      twinkles[i] = 0.5 + noise(i, 6);
+    }
+
+    const bufferGeometry = new THREE.BufferGeometry();
+    bufferGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    bufferGeometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    bufferGeometry.setAttribute("aSize", new THREE.BufferAttribute(sizes, 1));
+    bufferGeometry.setAttribute("aAlpha", new THREE.BufferAttribute(alphas, 1));
+    bufferGeometry.setAttribute("aTwinkle", new THREE.BufferAttribute(twinkles, 1));
+    return bufferGeometry;
+  }, []);
+
+  useFrame((state) => {
+    if (!pointsRef.current || !materialRef.current) return;
+    materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
+    materialRef.current.uniforms.uPixelRatio.value = Math.min(window.devicePixelRatio, 1.5);
+    pointsRef.current.position.y = scrollRef.current * 0.00008;
   });
 
-  const edges: GraphEdge[] = [];
+  return (
+    <points ref={pointsRef} geometry={geometry}>
+      <primitive object={createPointMaterial(0.45)} ref={materialRef} attach="material" />
+    </points>
+  );
+}
 
-  for (let i = 0; i < nodes.length; i++) {
-    for (let j = i + 1; j < nodes.length; j++) {
-      const from = nodes[i].position;
-      const to = nodes[j].position;
-      const distance = from.distanceTo(to);
-      const bothInTextZone = Math.abs(from.x) < 6 && Math.abs(from.y) < 3 && Math.abs(to.x) < 6 && Math.abs(to.y) < 3;
+function NebulaDust({ scrollRef }: { scrollRef: ScrollRef }) {
+  const pointsRef = useRef<THREE.Points>(null);
+  const materialRef = useRef<THREE.ShaderMaterial>(null);
+  const nebulaColors = useMemo(
+    () => ["#0a2a4a", "#0d1f3c", "#071a2e", "#0f2535", "#061520"].map((color) => new THREE.Color(color)),
+    []
+  );
 
-      if (distance > EDGE_MIN_DISTANCE && distance < EDGE_MAX_DISTANCE && !bothInTextZone) {
-        edges.push({ from: i, to: j });
+  const { geometry, basePositions, clusterMeta } = useMemo(() => {
+    const count = CLUSTER_COUNT * DUST_PER_CLUSTER;
+    const positions = new Float32Array(count * 3);
+    const colors = new Float32Array(count * 3);
+    const sizes = new Float32Array(count);
+    const alphas = new Float32Array(count);
+    const twinkles = new Float32Array(count);
+    const base = new Float32Array(count * 3);
+    const meta: Array<{ center: THREE.Vector3; speed: number }> = [];
+
+    for (let cluster = 0; cluster < CLUSTER_COUNT; cluster++) {
+      const center = new THREE.Vector3(
+        (noise(cluster, 20) - 0.5) * 46,
+        (noise(cluster, 21) - 0.5) * 30,
+        -7 - noise(cluster, 22) * 8
+      );
+      meta.push({
+        center,
+        speed: 0.0001 + noise(cluster, 23) * 0.0002,
+      });
+
+      const color = nebulaColors[cluster % nebulaColors.length];
+      for (let i = 0; i < DUST_PER_CLUSTER; i++) {
+        const index = cluster * DUST_PER_CLUSTER + i;
+        const x = gaussian(index, 30) * 3;
+        const y = gaussian(index, 31) * 3;
+        const z = gaussian(index, 32) * 1.6;
+        const px = center.x + x;
+        const py = center.y + y;
+        const pz = center.z + z;
+
+        base.set([px, py, pz], index * 3);
+        positions.set([px, py, pz], index * 3);
+        colors.set([color.r, color.g, color.b], index * 3);
+        sizes[index] = 0.04 + noise(index, 33) * 0.06;
+        alphas[index] = 0.08 + noise(index, 34) * 0.1;
+        twinkles[index] = 0.25 + noise(index, 35) * 0.35;
       }
     }
-  }
 
-  return { nodes, edges };
+    const bufferGeometry = new THREE.BufferGeometry();
+    bufferGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    bufferGeometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    bufferGeometry.setAttribute("aSize", new THREE.BufferAttribute(sizes, 1));
+    bufferGeometry.setAttribute("aAlpha", new THREE.BufferAttribute(alphas, 1));
+    bufferGeometry.setAttribute("aTwinkle", new THREE.BufferAttribute(twinkles, 1));
+    return { geometry: bufferGeometry, basePositions: base, clusterMeta: meta };
+  }, [nebulaColors]);
+
+  useFrame((state) => {
+    if (!pointsRef.current || !materialRef.current) return;
+    const positions = geometry.getAttribute("position") as THREE.BufferAttribute;
+    const arr = positions.array as Float32Array;
+
+    for (let cluster = 0; cluster < CLUSTER_COUNT; cluster++) {
+      const meta = clusterMeta[cluster];
+      const angle = state.clock.elapsedTime * 60 * meta.speed;
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+
+      for (let i = 0; i < DUST_PER_CLUSTER; i++) {
+        const index = cluster * DUST_PER_CLUSTER + i;
+        const x = basePositions[index * 3] - meta.center.x;
+        const z = basePositions[index * 3 + 2] - meta.center.z;
+        arr[index * 3] = meta.center.x + x * cos - z * sin;
+        arr[index * 3 + 1] = basePositions[index * 3 + 1];
+        arr[index * 3 + 2] = meta.center.z + x * sin + z * cos;
+      }
+    }
+
+    positions.needsUpdate = true;
+    materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
+    materialRef.current.uniforms.uPixelRatio.value = Math.min(window.devicePixelRatio, 1.5);
+    pointsRef.current.position.y = scrollRef.current * 0.00018;
+  });
+
+  return (
+    <points ref={pointsRef} geometry={geometry}>
+      <primitive object={createPointMaterial(0.1)} ref={materialRef} attach="material" />
+    </points>
+  );
 }
 
-function getActiveSet(time: number) {
-  const activeStart = Math.floor(time / 2.6) % NODE_COUNT;
-  const active = new Set<number>();
+function makeShapes() {
+  const tree = Array.from({ length: CONSTELLATION_COUNT }, (_, i) => {
+    const level = Math.floor(Math.log2(i + 1));
+    const indexInLevel = i - (2 ** level - 1);
+    const nodesInLevel = Math.max(1, 2 ** level);
+    return new THREE.Vector3(
+      ((indexInLevel + 0.5) / nodesInLevel - 0.5) * Math.min(16, nodesInLevel * 2.2),
+      6 - level * 2.1,
+      (noise(i, 70) - 0.5) * 2.4
+    );
+  });
 
-  for (let i = 0; i < ACTIVE_COUNT; i++) {
-    active.add((activeStart + i * 4) % NODE_COUNT);
-  }
+  const flow = Array.from({ length: CONSTELLATION_COUNT }, (_, i) => {
+    const column = i % 9;
+    const row = Math.floor(i / 9);
+    return new THREE.Vector3(
+      -8 + column * 2,
+      Math.sin(column * 0.85) * 1.6 + (row - 2) * 1.25,
+      (noise(i, 71) - 0.5) * 2
+    );
+  });
 
-  return active;
+  const hub = Array.from({ length: CONSTELLATION_COUNT }, (_, i) => {
+    if (i === 0) return new THREE.Vector3(0, 0, 0);
+    const spoke = (i - 1) % 8;
+    const ring = Math.floor((i - 1) / 8) + 1;
+    const angle = (spoke / 8) * Math.PI * 2;
+    const radius = 1.8 + ring * 1.4;
+    return new THREE.Vector3(Math.cos(angle) * radius, Math.sin(angle) * radius * 0.72, (noise(i, 72) - 0.5) * 2.6);
+  });
+
+  return [tree, flow, hub];
 }
 
-function CameraDrift() {
-  const { camera, scene } = useThree();
+function shapeEdges(shapeIndex: number) {
+  const edges: Array<[number, number]> = [];
+  if (shapeIndex === 0) {
+    for (let i = 1; i < CONSTELLATION_COUNT; i++) edges.push([Math.floor((i - 1) / 2), i]);
+  } else if (shapeIndex === 1) {
+    for (let i = 0; i < CONSTELLATION_COUNT - 1; i++) {
+      if ((i + 1) % 9 !== 0) edges.push([i, i + 1]);
+      if (i + 9 < CONSTELLATION_COUNT && i % 3 === 0) edges.push([i, i + 9]);
+    }
+  } else {
+    for (let i = 1; i < CONSTELLATION_COUNT; i++) {
+      edges.push([0, i]);
+      if (i > 1 && (i - 1) % 8 !== 0) edges.push([i - 1, i]);
+    }
+  }
+  return edges.slice(0, 56);
+}
+
+function ConstellationLayer({ scrollRef }: { scrollRef: ScrollRef }) {
+  const groupRef = useRef<THREE.Group>(null);
+  const nodeRefs = useRef<Array<THREE.Mesh | null>>([]);
+  const lineRef = useRef<THREE.LineSegments>(null);
+  const positionsRef = useRef<THREE.Vector3[]>([]);
+  const velocitiesRef = useRef<THREE.Vector3[]>([]);
+  const currentShapeRef = useRef(-1);
+  const scatterTargetsRef = useRef<THREE.Vector3[]>([]);
+  const shapes = useMemo(makeShapes, []);
+  const colors = useMemo(() => [new THREE.Color("#00FFB2"), new THREE.Color("#4488ff"), new THREE.Color("#ffffff")], []);
+  const nodeGeometry = useMemo(() => new THREE.IcosahedronGeometry(0.04, 1), []);
+
+  const lineGeometry = useMemo(() => {
+    const maxEdges = 64;
+    const bufferGeometry = new THREE.BufferGeometry();
+    bufferGeometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(maxEdges * 2 * 3), 3));
+    return bufferGeometry;
+  }, []);
+
+  useMemo(() => {
+    positionsRef.current = Array.from({ length: CONSTELLATION_COUNT }, (_, i) => {
+      const pos = new THREE.Vector3((noise(i, 80) - 0.5) * 28, (noise(i, 81) - 0.5) * 18, -2 + (noise(i, 82) - 0.5) * 6);
+      return pos;
+    });
+    velocitiesRef.current = Array.from(
+      { length: CONSTELLATION_COUNT },
+      (_, i) => new THREE.Vector3((noise(i, 83) - 0.5) * 0.016, (noise(i, 84) - 0.5) * 0.016, (noise(i, 85) - 0.5) * 0.012)
+    );
+    scatterTargetsRef.current = positionsRef.current.map((pos) => pos.clone());
+  }, []);
+
+  useFrame((state) => {
+    if (!groupRef.current || !lineRef.current) return;
+    const time = state.clock.elapsedTime;
+    const loop = time % SHAPE_DURATION;
+    const shapeIndex = Math.floor(time / SHAPE_DURATION) % shapes.length;
+
+    if (shapeIndex !== currentShapeRef.current) {
+      currentShapeRef.current = shapeIndex;
+      scatterTargetsRef.current = Array.from(
+        { length: CONSTELLATION_COUNT },
+        (_, i) => new THREE.Vector3((noise(i, 90 + shapeIndex) - 0.5) * 30, (noise(i, 94 + shapeIndex) - 0.5) * 18, -2 + (noise(i, 98 + shapeIndex) - 0.5) * 6)
+      );
+    }
+
+    positionsRef.current.forEach((position, index) => {
+      const mesh = nodeRefs.current[index];
+      if (!mesh) return;
+
+      if (loop < 4) {
+        position.lerp(scatterTargetsRef.current[index], 0.01);
+        position.add(velocitiesRef.current[index]);
+      } else if (loop < 8) {
+        position.lerp(shapes[shapeIndex][index], 0.012);
+      } else {
+        position.addScaledVector(velocitiesRef.current[index], 0.4);
+        position.lerp(scatterTargetsRef.current[index], 0.004);
+      }
+
+      mesh.position.copy(position);
+      const material = mesh.material as THREE.MeshStandardMaterial;
+      const twinkle = 0.5 + Math.sin(time * 0.8 + index) * 0.5;
+      material.opacity = 0.4 + twinkle * 0.4;
+      material.emissiveIntensity = 0.25 + twinkle * 0.35;
+    });
+
+    const edges = shapeEdges(shapeIndex);
+    const positionAttr = lineGeometry.getAttribute("position") as THREE.BufferAttribute;
+    const arr = positionAttr.array as Float32Array;
+    arr.fill(0);
+
+    let lineOpacity = 0;
+    if (loop >= 4 && loop < 8) lineOpacity = Math.min(0.25, ((loop - 4) / 2) * 0.25);
+    if (loop >= 8 && loop < 9) lineOpacity = Math.max(0, (1 - (loop - 8)) * 0.25);
+
+    edges.forEach(([a, b], index) => {
+      const aPos = positionsRef.current[a];
+      const bPos = positionsRef.current[b];
+      const close = aPos.distanceTo(shapes[shapeIndex][a]) < 0.5 && bPos.distanceTo(shapes[shapeIndex][b]) < 0.5;
+      if (!close && loop < 8) return;
+      arr.set([aPos.x, aPos.y, aPos.z, bPos.x, bPos.y, bPos.z], index * 6);
+    });
+
+    (lineRef.current.material as THREE.LineBasicMaterial).opacity = lineOpacity * 0.6;
+    positionAttr.needsUpdate = true;
+    groupRef.current.position.y = scrollRef.current * 0.00035;
+  });
+
+  return (
+    <group ref={groupRef}>
+      <lineSegments ref={lineRef} geometry={lineGeometry}>
+        <lineBasicMaterial color="#00FFB2" transparent opacity={0} depthWrite={false} />
+      </lineSegments>
+      {Array.from({ length: CONSTELLATION_COUNT }, (_, index) => {
+        const color = colors[index % 10 < 3 ? 0 : index % 10 < 7 ? 1 : 2];
+        return (
+          <mesh
+            key={index}
+            ref={(mesh) => {
+              nodeRefs.current[index] = mesh;
+            }}
+            geometry={nodeGeometry}
+          >
+            <meshStandardMaterial
+              transparent
+              depthWrite={false}
+              color={color}
+              emissive={color}
+              emissiveIntensity={0.35}
+              opacity={0.55}
+              roughness={0.4}
+            />
+          </mesh>
+        );
+      })}
+    </group>
+  );
+}
+
+function CameraDrift({ scrollRef }: { scrollRef: ScrollRef }) {
+  const { camera } = useThree();
 
   useFrame((state) => {
     const time = state.clock.elapsedTime;
-    camera.position.x = Math.sin(time * 0.08) * 5;
-    camera.position.y = Math.cos(time * 0.06) * 2.5;
+    camera.position.x = Math.sin(time * 0.04) * 1.5;
+    camera.position.y = Math.cos(time * 0.03) * 0.8 + scrollRef.current * 0.0001;
     camera.position.z = 24;
-    camera.lookAt(scene.position);
+    camera.lookAt(0, 0, 0);
   });
 
   return null;
 }
 
-function OrchestrationGraph() {
-  const nodeRefs = useRef<Array<THREE.Mesh | null>>([]);
-  const pulseRefs = useRef<Array<THREE.Mesh | null>>([]);
-  const lineRef = useRef<THREE.LineSegments>(null);
-  const nextPulseAt = useRef(0);
-  const pulses = useRef<Pulse[]>([]);
-
-  const { nodes, edges } = useMemo(makeGraph, []);
-
-  const geometry = useMemo(() => new THREE.IcosahedronGeometry(0.035, 1), []);
-  const pulseGeometry = useMemo(() => new THREE.SphereGeometry(0.07, 16, 16), []);
-
-  const lineGeometry = useMemo(() => {
-    const positions = new Float32Array(edges.length * 2 * 3);
-    const colors = new Float32Array(edges.length * 2 * 3);
-
-    edges.forEach((edge, index) => {
-      const from = nodes[edge.from].position;
-      const to = nodes[edge.to].position;
-      const positionIndex = index * 6;
-      const colorIndex = index * 6;
-
-      positions.set([from.x, from.y, from.z, to.x, to.y, to.z], positionIndex);
-      colors.set([LINE_COLOR.r, LINE_COLOR.g, LINE_COLOR.b, LINE_COLOR.r, LINE_COLOR.g, LINE_COLOR.b], colorIndex);
-    });
-
-    const bufferGeometry = new THREE.BufferGeometry();
-    bufferGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    bufferGeometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-    return bufferGeometry;
-  }, [edges, nodes]);
-
-  useFrame((state) => {
-    const time = state.clock.elapsedTime;
-    const activeNodes = getActiveSet(time);
-    const positionAttr = lineGeometry.getAttribute("position") as THREE.BufferAttribute;
-
-    nodes.forEach((node, index) => {
-      const mesh = nodeRefs.current[index];
-      if (!mesh) return;
-
-      const material = mesh.material as THREE.MeshStandardMaterial;
-      const pulse = 0.5 + Math.sin(time * 1.6 + node.offset) * 0.5;
-      const active = activeNodes.has(index);
-      const depthMultiplier = mesh.position.z < -2 ? 0.4 : mesh.position.z > 1 ? 1 : 0.72;
-      const opacity = active
-        ? (0.28 + pulse * 0.22) * depthMultiplier
-        : (0.15 + pulse * 0.2) * depthMultiplier;
-
-      mesh.position.x += Math.sin(time * 0.3 + node.offset) * 0.003;
-      mesh.position.y += Math.cos(time * 0.2 + node.offset * 1.3) * 0.002;
-      mesh.position.z += Math.sin(time * 0.15 + node.offset * 0.7) * 0.001;
-
-      mesh.scale.setScalar(active ? 1.2 : 1);
-      material.opacity = Math.min(active ? 0.5 : 0.35, opacity);
-      material.color.copy(active ? ACTIVE_COLOR : DIM_COLOR);
-      material.emissive.copy(active ? ACTIVE_COLOR : DIM_COLOR);
-      material.emissiveIntensity = active ? 0.25 + pulse * 0.25 : 0.03 + pulse * 0.05;
-    });
-
-    const colorAttr = lineGeometry.getAttribute("color") as THREE.BufferAttribute;
-    edges.forEach((edge, index) => {
-      const fromMesh = nodeRefs.current[edge.from];
-      const toMesh = nodeRefs.current[edge.to];
-      if (!fromMesh || !toMesh) return;
-
-      const positionIndex = index * 6;
-      const colorIndex = index * 6;
-      const fromPulse = 0.5 + Math.sin(time * 1.6 + nodes[edge.from].offset) * 0.5;
-      const toPulse = 0.5 + Math.sin(time * 1.6 + nodes[edge.to].offset) * 0.5;
-      const brightness = 0.55 + ((fromPulse + toPulse) / 2) * 0.45;
-
-      positionAttr.setXYZ(positionIndex / 3, fromMesh.position.x, fromMesh.position.y, fromMesh.position.z);
-      positionAttr.setXYZ(positionIndex / 3 + 1, toMesh.position.x, toMesh.position.y, toMesh.position.z);
-
-      for (let i = 0; i < 2; i++) {
-        colorAttr.setXYZ(
-          colorIndex / 3 + i,
-          LINE_COLOR.r * brightness,
-          LINE_COLOR.g * brightness,
-          LINE_COLOR.b * brightness
-        );
-      }
-    });
-    positionAttr.needsUpdate = true;
-    colorAttr.needsUpdate = true;
-
-    if (time >= nextPulseAt.current) {
-      const slot = Array.from({ length: MAX_PULSES }, (_, index) => index).find(
-        (index) => !pulses.current.some((pulse) => pulse.slot === index)
-      );
-
-      if (slot !== undefined && edges.length > 0) {
-        const edge = edges[Math.floor(noise(Math.floor(time * 10), 8) * edges.length)];
-        const direction = noise(Math.floor(time * 10), 9) > 0.5;
-        pulses.current.push({
-          from: direction ? edge.from : edge.to,
-          to: direction ? edge.to : edge.from,
-          start: time,
-          duration: 2,
-          slot,
-        });
-      }
-
-      nextPulseAt.current = time + 1.5;
-    }
-
-    pulses.current = pulses.current.filter((pulse) => {
-      const mesh = pulseRefs.current[pulse.slot];
-      if (!mesh) return time - pulse.start < pulse.duration + 0.3;
-
-      const progress = (time - pulse.start) / pulse.duration;
-      const fadeProgress = (time - pulse.start - pulse.duration) / 0.3;
-      const from = nodeRefs.current[pulse.from]?.position ?? nodes[pulse.from].position;
-      const to = nodeRefs.current[pulse.to]?.position ?? nodes[pulse.to].position;
-      const material = mesh.material as THREE.MeshStandardMaterial;
-
-      if (progress <= 1) {
-        const eased = progress * progress * (3 - 2 * progress);
-        mesh.visible = true;
-        mesh.position.lerpVectors(from, to, eased);
-        mesh.scale.setScalar(1);
-        material.opacity = 1;
-        return true;
-      }
-
-      if (fadeProgress <= 1) {
-        mesh.visible = true;
-        mesh.position.copy(to);
-        material.opacity = 1 - fadeProgress;
-        return true;
-      }
-
-      mesh.visible = false;
-      return false;
-    });
-  });
-
-  return (
-    <group>
-      <lineSegments ref={lineRef} geometry={lineGeometry}>
-        <lineBasicMaterial transparent opacity={0.1} vertexColors depthWrite={false} />
-      </lineSegments>
-
-      {nodes.map((node, index) => (
-        <mesh
-          key={node.id}
-          ref={(mesh) => {
-            nodeRefs.current[index] = mesh;
-          }}
-          geometry={geometry}
-          position={node.position}
-        >
-          <meshStandardMaterial
-            transparent
-            depthWrite={false}
-            color="#c7d0cf"
-            emissive="#c7d0cf"
-            emissiveIntensity={0.2}
-            opacity={0.35}
-            roughness={0.35}
-          />
-        </mesh>
-      ))}
-
-      {Array.from({ length: MAX_PULSES }, (_, index) => (
-        <mesh
-          key={index}
-          ref={(mesh) => {
-            pulseRefs.current[index] = mesh;
-          }}
-          geometry={pulseGeometry}
-          visible={false}
-        >
-          <meshStandardMaterial
-            transparent
-            depthWrite={false}
-            color="#00FFB2"
-            emissive="#00FFB2"
-            emissiveIntensity={3.5}
-            opacity={1}
-          />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
 export default function GlobalEnvironment() {
   const [mounted, setMounted] = useState(false);
+  const scrollRef = useRef(0);
 
   useEffect(() => {
     setMounted(true);
+    const handleScroll = () => {
+      scrollRef.current = window.scrollY;
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
-    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#050a0a]">
+    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#02040a]">
       {mounted && (
-        <Canvas
-          camera={{ position: [0, 0, 24], fov: 50 }}
-          gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
-          dpr={[1, 1.5]}
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", background: "#050a0a" }}
-        >
-          <color attach="background" args={["#050a0a"]} />
-          <ambientLight intensity={0.9} />
-          <pointLight position={[0, 0, 12]} intensity={1.6} color="#00FFB2" />
-          <pointLight position={[-10, 8, 8]} intensity={0.8} color="#7dd3fc" />
-          <OrchestrationGraph />
-          <CameraDrift />
-          <OrbitControls autoRotate autoRotateSpeed={0.4} enableZoom={false} enablePan={false} enableDamping dampingFactor={0.05} />
-        </Canvas>
+        <div className="absolute inset-0 opacity-[0.72]">
+          <Canvas
+            camera={{ position: [0, 0, 24], fov: 50 }}
+            gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
+            dpr={[1, 1.5]}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", background: "#02040a" }}
+          >
+            <color attach="background" args={["#02040a"]} />
+            <ambientLight intensity={0.6} />
+            <pointLight position={[0, 0, 10]} intensity={1.1} color="#4488ff" />
+            <StarField scrollRef={scrollRef} />
+            <NebulaDust scrollRef={scrollRef} />
+            <ConstellationLayer scrollRef={scrollRef} />
+            <CameraDrift scrollRef={scrollRef} />
+          </Canvas>
+        </div>
       )}
 
       <div
         className="absolute inset-0 z-10 pointer-events-none"
         style={{
-          background: "radial-gradient(ellipse 70% 60% at 50% 50%, transparent 0%, rgba(5,10,10,0.5) 55%, rgba(5,10,10,0.92) 100%)",
+          background: "radial-gradient(ellipse 75% 65% at 50% 50%, rgba(2,4,10,0.08) 0%, rgba(2,4,10,0.24) 48%, rgba(2,4,10,0.82) 100%)",
         }}
       />
 
       <div
         className="absolute inset-0 z-20 pointer-events-none"
         style={{
-          background: "radial-gradient(ellipse 45% 55% at 50% 52%, rgba(5,10,10,0.45) 0%, transparent 100%)",
+          background: "radial-gradient(ellipse 44% 50% at 50% 50%, rgba(2,4,10,0.58) 0%, rgba(2,4,10,0.2) 52%, transparent 100%)",
         }}
       />
     </div>

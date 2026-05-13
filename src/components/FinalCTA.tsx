@@ -31,7 +31,7 @@ export default function FinalCTA() {
       </div>
 
       <div className="container relative z-10">
-        <div className="max-w-3xl mx-auto flex flex-col items-center text-center cta-content">
+        <div className="glass-card max-w-3xl mx-auto flex flex-col items-center text-center cta-content">
 
           <div className="t-label tracking-widest uppercase opacity-70 mb-5">Start With The Operating Map</div>
 
@@ -55,7 +55,7 @@ export default function FinalCTA() {
           {/* Final trust bar */}
           <div className="flex flex-wrap items-center justify-center gap-6 opacity-50">
             <div className="flex items-center gap-2">
-              <div className="status-dot" style={{ width: 6, height: 6, boxShadow: "0 0 8px var(--success)" }} />
+              <div className="pulse-dot" />
               <span className="t-mono uppercase tracking-widest" style={{ fontSize: "11px" }}>128 workflows mapped</span>
             </div>
             <div className="w-px h-3 bg-white opacity-20" />

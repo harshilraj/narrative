@@ -157,8 +157,8 @@ export default function LiveOperations() {
             <div className="t-label tracking-widest uppercase opacity-70 mb-4">Operational Status</div>
             <h2 className="t-h2 font-serif text-balance" style={{ fontSize: "clamp(2rem, 4vw, 3.5rem)" }}>Live execution center.</h2>
           </div>
-          <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-5 py-2.5 rounded-full backdrop-blur-md">
-            <div className="status-dot w-2 h-2 rounded-full" style={{ boxShadow: "0 0 8px var(--success)" }} />
+          <div className="active-badge">
+            <div className="pulse-dot" />
             <span className="t-small uppercase tracking-widest text-xs font-medium opacity-80">
               All systems nominal
             </span>
@@ -170,7 +170,7 @@ export default function LiveOperations() {
         </div>
 
         {/* Command Panel */}
-        <div data-parallax="0.04" className="ops-panel relative rounded-2xl overflow-hidden shadow-2xl"
+        <div data-parallax="0.04" className="ops-panel glass-card relative overflow-hidden"
           style={{ background: "rgba(6,8,15,0.6)", border: "1px solid rgba(255,255,255,0.1)", backdropFilter: "blur(16px)" }}>
 
           {/* Scanlines */}
@@ -180,7 +180,7 @@ export default function LiveOperations() {
           <div className="flex items-center justify-between px-8 py-5 border-b"
             style={{ borderColor: "rgba(255,255,255,0.05)" }}>
             <div className="flex items-center gap-4">
-              <div className="status-dot" />
+              <div className="pulse-dot" />
               <span className="t-mono text-xs opacity-70">
                 NARRATIVE_AI // ORCHESTRATION_CORE // v2.4.1
               </span>
@@ -199,8 +199,8 @@ export default function LiveOperations() {
                 {/* Status + label */}
                 <div className="lg:col-span-4 flex flex-col gap-1.5">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="t-mono uppercase tracking-wider font-medium" style={{ color: op.color, fontSize: "10px", textShadow: `0 0 8px ${op.color}40` }}>
-                      ● {op.status}
+                    <span className="active-badge t-mono uppercase tracking-wider font-medium">
+                      <span className="pulse-dot" /> {op.status}
                     </span>
                   </div>
                   <div className="font-serif font-medium tracking-wide" style={{ color: "var(--text)", fontSize: "1.1rem" }}>
@@ -235,10 +235,7 @@ export default function LiveOperations() {
 
                 {/* Action */}
                 <div className="lg:col-span-2 flex justify-end">
-                  <button className="t-mono px-4 py-2 rounded bg-white/5 transition-all duration-300 hover:bg-white/10"
-                    style={{ border: "1px solid rgba(255,255,255,0.08)", color: "var(--text)", fontSize: "11px" }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = op.color + "80"; e.currentTarget.style.color = op.color; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "var(--text)"; }}>
+                  <button className="btn-ghost t-mono" style={{ fontSize: "11px" }}>
                     Inspect →
                   </button>
                 </div>

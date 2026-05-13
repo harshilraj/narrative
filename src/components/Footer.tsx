@@ -14,7 +14,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="relative" style={{ background: "rgba(6,8,15,0.8)", paddingTop: "4.5rem", paddingBottom: "2.5rem", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+    <footer className="relative" style={{ background: "rgba(2,6,12,0.75)", paddingTop: "4.5rem", paddingBottom: "2.5rem", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
       <div className="container relative z-10">
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 mb-12 md:mb-14">
@@ -26,7 +26,7 @@ export default function Footer() {
               Production AI systems for teams that need clear routing, accountable automation, and reliable deployment.
             </p>
             <div className="flex items-center gap-3">
-              <div className="status-dot w-2 h-2 rounded-full" style={{ boxShadow: "0 0 8px var(--success)" }} />
+              <div className="pulse-dot" />
               <span className="t-mono uppercase tracking-widest opacity-80" style={{ fontSize: "10px" }}>All systems nominal</span>
             </div>
           </div>

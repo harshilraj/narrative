@@ -39,7 +39,7 @@ export default function Hero() {
               fontFamily: "'DM Mono', monospace",
             }}
           >
-            <div className="w-1.5 h-1.5 rounded-full bg-[#00FFB2] shadow-[0_0_12px_rgba(0,255,178,0.9)] animate-pulse" />
+            <div className="pulse-dot" />
             <span className="text-[10px] uppercase tracking-widest text-white/70 font-medium">Operations layer online</span>
             <span className="text-white/20 text-[10px]">|</span>
             <span className="text-[10px] uppercase tracking-widest text-white/50">Real systems, not demos</span>
@@ -56,10 +56,10 @@ export default function Hero() {
           </p>
 
           <div data-reveal className="mt-10 md:mt-12 flex flex-col sm:flex-row items-center gap-4">
-            <a href="#contact" className="px-8 py-4 bg-white text-black text-[11px] uppercase tracking-[0.22em] font-bold rounded hover:bg-white/90 transition-colors" style={{ fontFamily: "'DM Mono', monospace" }}>
+            <a href="#contact" className="btn-primary text-[11px] uppercase" style={{ fontFamily: "'DM Mono', monospace" }}>
               PLAN MY SYSTEM
             </a>
-            <a href="#infrastructure" className="px-8 py-4 bg-transparent border border-white/18 text-white/80 text-[11px] uppercase tracking-[0.22em] font-medium rounded hover:bg-white/5 transition-colors" style={{ fontFamily: "'DM Mono', monospace" }}>
+            <a href="#infrastructure" className="btn-ghost text-[11px] uppercase" style={{ fontFamily: "'DM Mono', monospace" }}>
               SEE THE ARCHITECTURE
             </a>
           </div>

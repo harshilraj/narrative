@@ -216,7 +216,7 @@ export default function Process() {
 
                 {/* Content card */}
                 <div
-                  className="flex-1 relative rounded-2xl p-8 border transition-all duration-500 group"
+                  className="glass-card flex-1 group"
                   style={{
                     background: "rgba(255,255,255,0.02)",
                     border: "1px solid rgba(255,255,255,0.05)",
@@ -236,7 +236,7 @@ export default function Process() {
                   <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
                     <div className="flex items-center gap-3">
                       <span
-                        className="t-mono text-[10px] uppercase tracking-widest px-2 py-1 rounded"
+                        className="tag-chip t-mono uppercase"
                         style={{ color: step.accent, background: `${step.accent}12` }}
                       >
                         Phase {step.num}
@@ -250,14 +250,10 @@ export default function Process() {
                     </div>
 
                     {/* Live status indicator */}
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-1.5 h-1.5 rounded-full animate-pulse"
-                        style={{ background: step.accent }}
-                      />
+                    <div className="active-badge">
+                      <div className="pulse-dot" />
                       <span
-                        className="t-mono text-[9px] uppercase tracking-widest opacity-50"
-                        style={{ color: step.accent }}
+                        className="t-mono uppercase tracking-widest"
                       >
                         {step.status}
                       </span>
@@ -276,7 +272,7 @@ export default function Process() {
                     {step.detail.map((d) => (
                       <span
                         key={d}
-                        className="t-mono text-[10px] px-3 py-1.5 rounded-md text-white/40 tracking-wide"
+                        className="tag-chip t-mono tracking-wide"
                         style={{
                           background: `${step.accent}07`,
                           border: `1px solid ${step.accent}18`,
