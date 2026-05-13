@@ -20,14 +20,17 @@ type Pulse = {
   to: number;
   start: number;
   duration: number;
+  slot: number;
 };
 
-const NODE_COUNT = 70;
+const NODE_COUNT = 55;
 const ACTIVE_COUNT = 18;
-const EDGE_DISTANCE = 4;
+const EDGE_MIN_DISTANCE = 5;
+const EDGE_MAX_DISTANCE = 9;
+const MAX_PULSES = 6;
 const ACTIVE_COLOR = new THREE.Color("#00FFB2");
 const DIM_COLOR = new THREE.Color("#c7d0cf");
-const LINE_COLOR = new THREE.Color("#7fffe0");
+const LINE_COLOR = new THREE.Color("#ffffff");
 
 function noise(index: number, salt: number) {
   return Math.abs(Math.sin(index * 12.9898 + salt * 78.233) * 43758.5453) % 1;
@@ -35,17 +38,16 @@ function noise(index: number, salt: number) {
 
 function makeGraph() {
   const nodes: GraphNode[] = Array.from({ length: NODE_COUNT }, (_, id) => {
-    const lane = id % 7;
-    const depthBand = Math.floor(id / 10);
+    const angle = noise(id, 1) * Math.PI * 2;
+    const radius = 8 + noise(id, 2) * 10;
+    const x = Math.cos(angle) * radius + (noise(id, 3) - 0.5) * 4;
+    const y = Math.sin(angle) * radius * 0.6 + (noise(id, 4) - 0.5) * 3;
+    const z = (noise(id, 5) - 0.5) * 6;
 
     return {
       id,
-      position: new THREE.Vector3(
-        (noise(id, 1) - 0.5) * 40,
-        (noise(id, 2) - 0.5) * 24 + Math.sin(lane) * 1.4,
-        (noise(id, 3) - 0.5) * 8 + (depthBand - 3) * 0.25
-      ),
-      offset: noise(id, 4) * Math.PI * 2,
+      position: new THREE.Vector3(x, y, z),
+      offset: noise(id, 6) * Math.PI * 2,
     };
   });
 
@@ -53,7 +55,12 @@ function makeGraph() {
 
   for (let i = 0; i < nodes.length; i++) {
     for (let j = i + 1; j < nodes.length; j++) {
-      if (nodes[i].position.distanceTo(nodes[j].position) < EDGE_DISTANCE) {
+      const from = nodes[i].position;
+      const to = nodes[j].position;
+      const distance = from.distanceTo(to);
+      const bothInTextZone = Math.abs(from.x) < 6 && Math.abs(from.y) < 3 && Math.abs(to.x) < 6 && Math.abs(to.y) < 3;
+
+      if (distance > EDGE_MIN_DISTANCE && distance < EDGE_MAX_DISTANCE && !bothInTextZone) {
         edges.push({ from: i, to: j });
       }
     }
@@ -78,8 +85,8 @@ function CameraDrift() {
 
   useFrame((state) => {
     const time = state.clock.elapsedTime;
-    camera.position.x = Math.sin(time * 0.05) * 3;
-    camera.position.y = Math.cos(time * 0.07) * 1.5;
+    camera.position.x = Math.sin(time * 0.08) * 5;
+    camera.position.y = Math.cos(time * 0.06) * 2.5;
     camera.position.z = 24;
     camera.lookAt(scene.position);
   });
@@ -89,23 +96,15 @@ function CameraDrift() {
 
 function OrchestrationGraph() {
   const nodeRefs = useRef<Array<THREE.Mesh | null>>([]);
-  const pulseRef = useRef<THREE.Mesh>(null);
+  const pulseRefs = useRef<Array<THREE.Mesh | null>>([]);
   const lineRef = useRef<THREE.LineSegments>(null);
   const nextPulseAt = useRef(0);
-  const currentPulse = useRef<Pulse | null>(null);
+  const pulses = useRef<Pulse[]>([]);
 
   const { nodes, edges } = useMemo(makeGraph, []);
 
-  const edgeMap = useMemo(() => {
-    const map = new Map<number, GraphEdge[]>();
-    edges.forEach((edge) => {
-      map.set(edge.from, [...(map.get(edge.from) ?? []), edge]);
-      map.set(edge.to, [...(map.get(edge.to) ?? []), edge]);
-    });
-    return map;
-  }, [edges]);
-
-  const geometry = useMemo(() => new THREE.IcosahedronGeometry(0.08, 1), []);
+  const geometry = useMemo(() => new THREE.IcosahedronGeometry(0.035, 1), []);
+  const pulseGeometry = useMemo(() => new THREE.SphereGeometry(0.07, 16, 16), []);
 
   const lineGeometry = useMemo(() => {
     const positions = new Float32Array(edges.length * 2 * 3);
@@ -130,6 +129,7 @@ function OrchestrationGraph() {
   useFrame((state) => {
     const time = state.clock.elapsedTime;
     const activeNodes = getActiveSet(time);
+    const positionAttr = lineGeometry.getAttribute("position") as THREE.BufferAttribute;
 
     nodes.forEach((node, index) => {
       const mesh = nodeRefs.current[index];
@@ -138,22 +138,36 @@ function OrchestrationGraph() {
       const material = mesh.material as THREE.MeshStandardMaterial;
       const pulse = 0.5 + Math.sin(time * 1.6 + node.offset) * 0.5;
       const active = activeNodes.has(index);
-      const scale = active ? 1.2 + pulse * 0.75 : 0.85 + pulse * 0.28;
+      const depthMultiplier = mesh.position.z < -2 ? 0.4 : mesh.position.z > 1 ? 1 : 0.72;
+      const opacity = active
+        ? (0.28 + pulse * 0.22) * depthMultiplier
+        : (0.15 + pulse * 0.2) * depthMultiplier;
 
-      mesh.scale.setScalar(scale);
-      material.opacity = active ? 0.72 + pulse * 0.28 : 0.22 + pulse * 0.22;
+      mesh.position.x += Math.sin(time * 0.3 + node.offset) * 0.003;
+      mesh.position.y += Math.cos(time * 0.2 + node.offset * 1.3) * 0.002;
+      mesh.position.z += Math.sin(time * 0.15 + node.offset * 0.7) * 0.001;
+
+      mesh.scale.setScalar(active ? 1.2 : 1);
+      material.opacity = Math.min(active ? 0.5 : 0.35, opacity);
       material.color.copy(active ? ACTIVE_COLOR : DIM_COLOR);
       material.emissive.copy(active ? ACTIVE_COLOR : DIM_COLOR);
-      material.emissiveIntensity = active ? 1.8 + pulse * 1.3 : 0.12 + pulse * 0.18;
+      material.emissiveIntensity = active ? 0.25 + pulse * 0.25 : 0.03 + pulse * 0.05;
     });
 
     const colorAttr = lineGeometry.getAttribute("color") as THREE.BufferAttribute;
     edges.forEach((edge, index) => {
+      const fromMesh = nodeRefs.current[edge.from];
+      const toMesh = nodeRefs.current[edge.to];
+      if (!fromMesh || !toMesh) return;
+
+      const positionIndex = index * 6;
+      const colorIndex = index * 6;
       const fromPulse = 0.5 + Math.sin(time * 1.6 + nodes[edge.from].offset) * 0.5;
       const toPulse = 0.5 + Math.sin(time * 1.6 + nodes[edge.to].offset) * 0.5;
-      const activeBoost = activeNodes.has(edge.from) || activeNodes.has(edge.to) ? 0.85 : 0.22;
-      const brightness = (0.24 + ((fromPulse + toPulse) / 2) * 0.76) * activeBoost;
-      const colorIndex = index * 6;
+      const brightness = 0.55 + ((fromPulse + toPulse) / 2) * 0.45;
+
+      positionAttr.setXYZ(positionIndex / 3, fromMesh.position.x, fromMesh.position.y, fromMesh.position.z);
+      positionAttr.setXYZ(positionIndex / 3 + 1, toMesh.position.x, toMesh.position.y, toMesh.position.z);
 
       for (let i = 0; i < 2; i++) {
         colorAttr.setXYZ(
@@ -164,45 +178,64 @@ function OrchestrationGraph() {
         );
       }
     });
+    positionAttr.needsUpdate = true;
     colorAttr.needsUpdate = true;
 
     if (time >= nextPulseAt.current) {
-      const activeList = Array.from(activeNodes);
-      const from = activeList[Math.floor(noise(Math.floor(time * 10), 8) * activeList.length)];
-      const candidates = edgeMap.get(from) ?? [];
+      const slot = Array.from({ length: MAX_PULSES }, (_, index) => index).find(
+        (index) => !pulses.current.some((pulse) => pulse.slot === index)
+      );
 
-      if (candidates.length > 0) {
-        const edge = candidates[Math.floor(noise(Math.floor(time * 10), 9) * candidates.length)];
-        currentPulse.current = {
-          from,
-          to: edge.from === from ? edge.to : edge.from,
+      if (slot !== undefined && edges.length > 0) {
+        const edge = edges[Math.floor(noise(Math.floor(time * 10), 8) * edges.length)];
+        const direction = noise(Math.floor(time * 10), 9) > 0.5;
+        pulses.current.push({
+          from: direction ? edge.from : edge.to,
+          to: direction ? edge.to : edge.from,
           start: time,
-          duration: 1.2,
-        };
+          duration: 2,
+          slot,
+        });
       }
 
-      nextPulseAt.current = time + 2.1 + noise(Math.floor(time * 10), 10) * 0.9;
+      nextPulseAt.current = time + 1.5;
     }
 
-    if (pulseRef.current && currentPulse.current) {
-      const pulse = currentPulse.current;
-      const progress = THREE.MathUtils.clamp((time - pulse.start) / pulse.duration, 0, 1);
-      const eased = progress * progress * (3 - 2 * progress);
-      const from = nodes[pulse.from].position;
-      const to = nodes[pulse.to].position;
+    pulses.current = pulses.current.filter((pulse) => {
+      const mesh = pulseRefs.current[pulse.slot];
+      if (!mesh) return time - pulse.start < pulse.duration + 0.3;
 
-      pulseRef.current.visible = progress < 1;
-      pulseRef.current.position.lerpVectors(from, to, eased);
-      pulseRef.current.scale.setScalar(1.4 + Math.sin(progress * Math.PI) * 1.1);
+      const progress = (time - pulse.start) / pulse.duration;
+      const fadeProgress = (time - pulse.start - pulse.duration) / 0.3;
+      const from = nodeRefs.current[pulse.from]?.position ?? nodes[pulse.from].position;
+      const to = nodeRefs.current[pulse.to]?.position ?? nodes[pulse.to].position;
+      const material = mesh.material as THREE.MeshStandardMaterial;
 
-      if (progress >= 1) currentPulse.current = null;
-    }
+      if (progress <= 1) {
+        const eased = progress * progress * (3 - 2 * progress);
+        mesh.visible = true;
+        mesh.position.lerpVectors(from, to, eased);
+        mesh.scale.setScalar(1);
+        material.opacity = 1;
+        return true;
+      }
+
+      if (fadeProgress <= 1) {
+        mesh.visible = true;
+        mesh.position.copy(to);
+        material.opacity = 1 - fadeProgress;
+        return true;
+      }
+
+      mesh.visible = false;
+      return false;
+    });
   });
 
   return (
     <group>
       <lineSegments ref={lineRef} geometry={lineGeometry}>
-        <lineBasicMaterial transparent opacity={0.62} vertexColors blending={THREE.AdditiveBlending} depthWrite={false} />
+        <lineBasicMaterial transparent opacity={0.1} vertexColors depthWrite={false} />
       </lineSegments>
 
       {nodes.map((node, index) => (
@@ -226,17 +259,25 @@ function OrchestrationGraph() {
         </mesh>
       ))}
 
-      <mesh ref={pulseRef} visible={false}>
-        <sphereGeometry args={[0.11, 16, 16]} />
-        <meshStandardMaterial
-          transparent
-          depthWrite={false}
-          color="#00FFB2"
-          emissive="#00FFB2"
-          emissiveIntensity={3.2}
-          opacity={0.95}
-        />
-      </mesh>
+      {Array.from({ length: MAX_PULSES }, (_, index) => (
+        <mesh
+          key={index}
+          ref={(mesh) => {
+            pulseRefs.current[index] = mesh;
+          }}
+          geometry={pulseGeometry}
+          visible={false}
+        >
+          <meshStandardMaterial
+            transparent
+            depthWrite={false}
+            color="#00FFB2"
+            emissive="#00FFB2"
+            emissiveIntensity={3.5}
+            opacity={1}
+          />
+        </mesh>
+      ))}
     </group>
   );
 }
@@ -263,22 +304,21 @@ export default function GlobalEnvironment() {
           <pointLight position={[-10, 8, 8]} intensity={0.8} color="#7dd3fc" />
           <OrchestrationGraph />
           <CameraDrift />
-          <OrbitControls autoRotate autoRotateSpeed={0.15} enableZoom={false} enablePan={false} enableDamping dampingFactor={0.05} />
+          <OrbitControls autoRotate autoRotateSpeed={0.4} enableZoom={false} enablePan={false} enableDamping dampingFactor={0.05} />
         </Canvas>
       )}
 
       <div
         className="absolute inset-0 z-10 pointer-events-none"
         style={{
-          background: "radial-gradient(ellipse at center, transparent 40%, rgba(5,10,10,0.85) 100%)",
+          background: "radial-gradient(ellipse 70% 60% at 50% 50%, transparent 0%, rgba(5,10,10,0.5) 55%, rgba(5,10,10,0.92) 100%)",
         }}
       />
 
       <div
         className="absolute inset-0 z-20 pointer-events-none"
         style={{
-          background:
-            "linear-gradient(to bottom, rgba(5,10,10,0.12) 0%, rgba(5,10,10,0.02) 28%, rgba(5,10,10,0.18) 100%)",
+          background: "radial-gradient(ellipse 45% 55% at 50% 52%, rgba(5,10,10,0.45) 0%, transparent 100%)",
         }}
       />
     </div>
