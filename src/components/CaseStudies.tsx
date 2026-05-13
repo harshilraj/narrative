@@ -99,8 +99,8 @@ function LogisticsDiagram() {
       {/* Nodes on outer ring */}
       {[0, 60, 120, 180, 240, 300].map((angle, i) => {
         const rad = (angle * Math.PI) / 180;
-        const x = 250 + Math.cos(rad) * 140;
-        const y = 180 + Math.sin(rad) * 140;
+        const x = Number((250 + Math.cos(rad) * 140).toFixed(3));
+        const y = Number((180 + Math.sin(rad) * 140).toFixed(3));
         const color = i % 2 === 0 ? "#5B8EF0" : "#34D399";
         return (
           <g key={`l-${i}`}>
