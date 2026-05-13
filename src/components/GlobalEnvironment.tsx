@@ -1,253 +1,285 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
-import { Canvas, useFrame } from "@react-three/fiber";
 
-type ScrollState = {
-  progress: number;
-  velocity: number;
+type GraphNode = {
+  id: number;
+  position: THREE.Vector3;
+  offset: number;
 };
 
-const flowVertexShader = `
-  uniform float uTime;
-  uniform float uScroll;
-  uniform float uVelocity;
-  varying vec2 vUv;
-  varying float vDepth;
+type GraphEdge = {
+  from: number;
+  to: number;
+};
 
-  void main() {
-    vUv = uv;
-    vec3 pos = position;
+type Pulse = {
+  from: number;
+  to: number;
+  start: number;
+  duration: number;
+};
 
-    float waveA = sin(pos.x * 0.16 + uTime * 0.45 + uScroll * 5.0);
-    float waveB = cos(pos.y * 0.12 - uTime * 0.32 + uScroll * 3.0);
-    float scrollLift = sin(uScroll * 3.14159 + pos.x * 0.035) * 1.8;
+const NODE_COUNT = 70;
+const ACTIVE_COUNT = 18;
+const EDGE_DISTANCE = 4;
+const ACTIVE_COLOR = new THREE.Color("#00FFB2");
+const DIM_COLOR = new THREE.Color("#c7d0cf");
+const LINE_COLOR = new THREE.Color("#7fffe0");
 
-    pos.z += waveA * 1.4 + waveB * 0.9;
-    pos.y += scrollLift + uVelocity * 2.0;
-    pos.x += sin(uTime * 0.18 + pos.y * 0.08) * 0.8;
-
-    vDepth = pos.z;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-  }
-`;
-
-const flowFragmentShader = `
-  uniform float uTime;
-  uniform float uScroll;
-  uniform vec3 uColorA;
-  uniform vec3 uColorB;
-  varying vec2 vUv;
-  varying float vDepth;
-
-  void main() {
-    float laneA = smoothstep(0.035, 0.0, abs(sin((vUv.y + uScroll * 0.25) * 14.0 + uTime * 0.18) - 0.55));
-    float laneB = smoothstep(0.03, 0.0, abs(sin((vUv.y - uScroll * 0.18) * 9.0 - uTime * 0.14) + 0.25));
-    float breath = 0.55 + sin(uTime * 0.55 + vUv.x * 4.0) * 0.18;
-    float edgeFade = smoothstep(0.0, 0.18, vUv.x) * smoothstep(1.0, 0.72, vUv.x);
-    float verticalFade = smoothstep(0.0, 0.18, vUv.y) * smoothstep(1.0, 0.12, vUv.y);
-    float alpha = (laneA * 0.22 + laneB * 0.12) * breath * edgeFade * verticalFade;
-
-    vec3 color = mix(uColorA, uColorB, vUv.x + sin(vUv.y * 4.0 + uTime * 0.2) * 0.08);
-    gl_FragColor = vec4(color, alpha);
-  }
-`;
-
-function deterministicNoise(index: number, salt: number) {
-  return (Math.sin(index * 12.9898 + salt * 78.233) * 43758.5453) % 1;
+function noise(index: number, salt: number) {
+  return Math.abs(Math.sin(index * 12.9898 + salt * 78.233) * 43758.5453) % 1;
 }
 
-function SignalMist({ scroll }: { scroll: ScrollState }) {
-  const pointsRef = useRef<THREE.Points>(null);
-  const count = 420;
+function makeGraph() {
+  const nodes: GraphNode[] = Array.from({ length: NODE_COUNT }, (_, id) => {
+    const lane = id % 7;
+    const depthBand = Math.floor(id / 10);
 
-  const particles = useMemo(() => {
-    const positions = new Float32Array(count * 3);
-    const colors = new Float32Array(count * 3);
-    const base = new Float32Array(count * 3);
-    const colorA = new THREE.Color("#5B8EF0");
-    const colorB = new THREE.Color("#34D399");
+    return {
+      id,
+      position: new THREE.Vector3(
+        (noise(id, 1) - 0.5) * 40,
+        (noise(id, 2) - 0.5) * 24 + Math.sin(lane) * 1.4,
+        (noise(id, 3) - 0.5) * 8 + (depthBand - 3) * 0.25
+      ),
+      offset: noise(id, 4) * Math.PI * 2,
+    };
+  });
 
-    for (let i = 0; i < count; i++) {
-      const x = (deterministicNoise(i, 1) - 0.5) * 70;
-      const y = (deterministicNoise(i, 2) - 0.5) * 42;
-      const z = -24 + deterministicNoise(i, 3) * 18;
-      const color = colorA.clone().lerp(colorB, deterministicNoise(i, 4));
+  const edges: GraphEdge[] = [];
 
-      base[i * 3] = x;
-      base[i * 3 + 1] = y;
-      base[i * 3 + 2] = z;
-      positions[i * 3] = x;
-      positions[i * 3 + 1] = y;
-      positions[i * 3 + 2] = z;
-      colors[i * 3] = color.r;
-      colors[i * 3 + 1] = color.g;
-      colors[i * 3 + 2] = color.b;
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      if (nodes[i].position.distanceTo(nodes[j].position) < EDGE_DISTANCE) {
+        edges.push({ from: i, to: j });
+      }
     }
+  }
 
-    return { positions, colors, base };
-  }, []);
+  return { nodes, edges };
+}
+
+function getActiveSet(time: number) {
+  const activeStart = Math.floor(time / 2.6) % NODE_COUNT;
+  const active = new Set<number>();
+
+  for (let i = 0; i < ACTIVE_COUNT; i++) {
+    active.add((activeStart + i * 4) % NODE_COUNT);
+  }
+
+  return active;
+}
+
+function CameraDrift() {
+  const { camera, scene } = useThree();
 
   useFrame((state) => {
-    if (!pointsRef.current) return;
+    const time = state.clock.elapsedTime;
+    camera.position.x = Math.sin(time * 0.05) * 3;
+    camera.position.y = Math.cos(time * 0.07) * 1.5;
+    camera.position.z = 24;
+    camera.lookAt(scene.position);
+  });
 
-    const elapsed = state.clock.elapsedTime;
-    const positions = pointsRef.current.geometry.attributes.position.array as Float32Array;
-    const scrollPush = scroll.progress * 18;
-    const speed = 0.22 + Math.abs(scroll.velocity) * 1.2;
+  return null;
+}
 
-    for (let i = 0; i < count; i++) {
-      const bx = particles.base[i * 3];
-      const by = particles.base[i * 3 + 1];
-      const bz = particles.base[i * 3 + 2];
-      const lane = deterministicNoise(i, 6) > 0.5 ? 1 : -1;
+function OrchestrationGraph() {
+  const nodeRefs = useRef<Array<THREE.Mesh | null>>([]);
+  const pulseRef = useRef<THREE.Mesh>(null);
+  const lineRef = useRef<THREE.LineSegments>(null);
+  const nextPulseAt = useRef(0);
+  const currentPulse = useRef<Pulse | null>(null);
 
-      positions[i * 3] = bx + Math.sin(elapsed * 0.18 + by * 0.12) * 2.2 + scroll.progress * lane * 4;
-      positions[i * 3 + 1] = by + ((elapsed * speed + scrollPush + i * 0.13) % 10) - 5;
-      positions[i * 3 + 2] = bz + Math.cos(elapsed * 0.12 + bx * 0.08) * 1.2;
+  const { nodes, edges } = useMemo(makeGraph, []);
+
+  const edgeMap = useMemo(() => {
+    const map = new Map<number, GraphEdge[]>();
+    edges.forEach((edge) => {
+      map.set(edge.from, [...(map.get(edge.from) ?? []), edge]);
+      map.set(edge.to, [...(map.get(edge.to) ?? []), edge]);
+    });
+    return map;
+  }, [edges]);
+
+  const geometry = useMemo(() => new THREE.IcosahedronGeometry(0.08, 1), []);
+
+  const lineGeometry = useMemo(() => {
+    const positions = new Float32Array(edges.length * 2 * 3);
+    const colors = new Float32Array(edges.length * 2 * 3);
+
+    edges.forEach((edge, index) => {
+      const from = nodes[edge.from].position;
+      const to = nodes[edge.to].position;
+      const positionIndex = index * 6;
+      const colorIndex = index * 6;
+
+      positions.set([from.x, from.y, from.z, to.x, to.y, to.z], positionIndex);
+      colors.set([LINE_COLOR.r, LINE_COLOR.g, LINE_COLOR.b, LINE_COLOR.r, LINE_COLOR.g, LINE_COLOR.b], colorIndex);
+    });
+
+    const bufferGeometry = new THREE.BufferGeometry();
+    bufferGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    bufferGeometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    return bufferGeometry;
+  }, [edges, nodes]);
+
+  useFrame((state) => {
+    const time = state.clock.elapsedTime;
+    const activeNodes = getActiveSet(time);
+
+    nodes.forEach((node, index) => {
+      const mesh = nodeRefs.current[index];
+      if (!mesh) return;
+
+      const material = mesh.material as THREE.MeshStandardMaterial;
+      const pulse = 0.5 + Math.sin(time * 1.6 + node.offset) * 0.5;
+      const active = activeNodes.has(index);
+      const scale = active ? 1.2 + pulse * 0.75 : 0.85 + pulse * 0.28;
+
+      mesh.scale.setScalar(scale);
+      material.opacity = active ? 0.72 + pulse * 0.28 : 0.22 + pulse * 0.22;
+      material.color.copy(active ? ACTIVE_COLOR : DIM_COLOR);
+      material.emissive.copy(active ? ACTIVE_COLOR : DIM_COLOR);
+      material.emissiveIntensity = active ? 1.8 + pulse * 1.3 : 0.12 + pulse * 0.18;
+    });
+
+    const colorAttr = lineGeometry.getAttribute("color") as THREE.BufferAttribute;
+    edges.forEach((edge, index) => {
+      const fromPulse = 0.5 + Math.sin(time * 1.6 + nodes[edge.from].offset) * 0.5;
+      const toPulse = 0.5 + Math.sin(time * 1.6 + nodes[edge.to].offset) * 0.5;
+      const activeBoost = activeNodes.has(edge.from) || activeNodes.has(edge.to) ? 0.85 : 0.22;
+      const brightness = (0.24 + ((fromPulse + toPulse) / 2) * 0.76) * activeBoost;
+      const colorIndex = index * 6;
+
+      for (let i = 0; i < 2; i++) {
+        colorAttr.setXYZ(
+          colorIndex / 3 + i,
+          LINE_COLOR.r * brightness,
+          LINE_COLOR.g * brightness,
+          LINE_COLOR.b * brightness
+        );
+      }
+    });
+    colorAttr.needsUpdate = true;
+
+    if (time >= nextPulseAt.current) {
+      const activeList = Array.from(activeNodes);
+      const from = activeList[Math.floor(noise(Math.floor(time * 10), 8) * activeList.length)];
+      const candidates = edgeMap.get(from) ?? [];
+
+      if (candidates.length > 0) {
+        const edge = candidates[Math.floor(noise(Math.floor(time * 10), 9) * candidates.length)];
+        currentPulse.current = {
+          from,
+          to: edge.from === from ? edge.to : edge.from,
+          start: time,
+          duration: 1.2,
+        };
+      }
+
+      nextPulseAt.current = time + 2.1 + noise(Math.floor(time * 10), 10) * 0.9;
     }
 
-    pointsRef.current.geometry.attributes.position.needsUpdate = true;
+    if (pulseRef.current && currentPulse.current) {
+      const pulse = currentPulse.current;
+      const progress = THREE.MathUtils.clamp((time - pulse.start) / pulse.duration, 0, 1);
+      const eased = progress * progress * (3 - 2 * progress);
+      const from = nodes[pulse.from].position;
+      const to = nodes[pulse.to].position;
+
+      pulseRef.current.visible = progress < 1;
+      pulseRef.current.position.lerpVectors(from, to, eased);
+      pulseRef.current.scale.setScalar(1.4 + Math.sin(progress * Math.PI) * 1.1);
+
+      if (progress >= 1) currentPulse.current = null;
+    }
   });
 
   return (
-    <points ref={pointsRef}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={count} array={particles.positions} itemSize={3} />
-        <bufferAttribute attach="attributes-color" count={count} array={particles.colors} itemSize={3} />
-      </bufferGeometry>
-      <pointsMaterial
-        size={0.13}
-        transparent
-        opacity={0.38}
-        vertexColors
-        blending={THREE.AdditiveBlending}
-        depthWrite={false}
-        sizeAttenuation
-      />
-    </points>
-  );
-}
+    <group>
+      <lineSegments ref={lineRef} geometry={lineGeometry}>
+        <lineBasicMaterial transparent opacity={0.62} vertexColors blending={THREE.AdditiveBlending} depthWrite={false} />
+      </lineSegments>
 
-function FlowPlane({ scroll }: { scroll: ScrollState }) {
-  const groupRef = useRef<THREE.Group>(null);
-  const materialRef = useRef<THREE.ShaderMaterial>(null);
+      {nodes.map((node, index) => (
+        <mesh
+          key={node.id}
+          ref={(mesh) => {
+            nodeRefs.current[index] = mesh;
+          }}
+          geometry={geometry}
+          position={node.position}
+        >
+          <meshStandardMaterial
+            transparent
+            depthWrite={false}
+            color="#c7d0cf"
+            emissive="#c7d0cf"
+            emissiveIntensity={0.2}
+            opacity={0.35}
+            roughness={0.35}
+          />
+        </mesh>
+      ))}
 
-  const uniforms = useMemo(
-    () => ({
-      uTime: { value: 0 },
-      uScroll: { value: 0 },
-      uVelocity: { value: 0 },
-      uColorA: { value: new THREE.Color("#5B8EF0") },
-      uColorB: { value: new THREE.Color("#34D399") },
-    }),
-    []
-  );
-
-  useFrame((state) => {
-    if (!groupRef.current || !materialRef.current) return;
-
-    uniforms.uTime.value = state.clock.elapsedTime;
-    uniforms.uScroll.value = THREE.MathUtils.lerp(uniforms.uScroll.value, scroll.progress, 0.045);
-    uniforms.uVelocity.value = THREE.MathUtils.lerp(uniforms.uVelocity.value, scroll.velocity, 0.08);
-
-    groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, -0.55 + scroll.progress * 0.24, 0.04);
-    groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, -0.18 + scroll.progress * 0.36, 0.04);
-    groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, -3 + scroll.progress * 5, 0.04);
-  });
-
-  return (
-    <group ref={groupRef} position={[0, -3, -16]} rotation={[-0.55, -0.18, 0]}>
-      <mesh>
-        <planeGeometry args={[92, 54, 128, 64]} />
-        <shaderMaterial
-          ref={materialRef}
+      <mesh ref={pulseRef} visible={false}>
+        <sphereGeometry args={[0.11, 16, 16]} />
+        <meshStandardMaterial
           transparent
           depthWrite={false}
-          blending={THREE.AdditiveBlending}
-          vertexShader={flowVertexShader}
-          fragmentShader={flowFragmentShader}
-          uniforms={uniforms}
+          color="#00FFB2"
+          emissive="#00FFB2"
+          emissiveIntensity={3.2}
+          opacity={0.95}
         />
       </mesh>
     </group>
   );
 }
 
-function NaturalFlow({ scroll }: { scroll: ScrollState }) {
-  const rigRef = useRef<THREE.Group>(null);
-
-  useFrame((state) => {
-    if (!rigRef.current) return;
-    const elapsed = state.clock.elapsedTime;
-    rigRef.current.rotation.z = Math.sin(elapsed * 0.08) * 0.025;
-    rigRef.current.position.x = Math.sin(elapsed * 0.06 + scroll.progress * 3) * 1.2;
-  });
-
-  return (
-    <group ref={rigRef}>
-      <FlowPlane scroll={scroll} />
-      <SignalMist scroll={scroll} />
-    </group>
-  );
-}
-
 export default function GlobalEnvironment() {
-  const [scroll, setScroll] = useState<ScrollState>({ progress: 0, velocity: 0 });
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    let lastScroll = window.scrollY;
-    let lastTime = performance.now();
-
-    const handleScroll = () => {
-      const maxScroll = document.body.scrollHeight - window.innerHeight;
-      const currentScroll = window.scrollY;
-      const now = performance.now();
-      const elapsed = Math.max(16, now - lastTime);
-      const velocity = THREE.MathUtils.clamp((currentScroll - lastScroll) / elapsed, -2, 2);
-
-      setScroll({
-        progress: Math.max(0, Math.min(1, currentScroll / (maxScroll || 1))),
-        velocity,
-      });
-
-      lastScroll = currentScroll;
-      lastTime = now;
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener("scroll", handleScroll);
+    setMounted(true);
   }, []);
 
   return (
-    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#020408]">
-      <div className="absolute inset-0 z-0">
-        <Canvas camera={{ position: [0, 0, 28], fov: 50 }} gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}>
-          <fog attach="fog" args={["#020408", 18, 54]} />
-          <NaturalFlow scroll={scroll} />
+    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#050a0a]">
+      {mounted && (
+        <Canvas
+          camera={{ position: [0, 0, 24], fov: 50 }}
+          gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
+          dpr={[1, 1.5]}
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", background: "#050a0a" }}
+        >
+          <color attach="background" args={["#050a0a"]} />
+          <ambientLight intensity={0.9} />
+          <pointLight position={[0, 0, 12]} intensity={1.6} color="#00FFB2" />
+          <pointLight position={[-10, 8, 8]} intensity={0.8} color="#7dd3fc" />
+          <OrchestrationGraph />
+          <CameraDrift />
+          <OrbitControls autoRotate autoRotateSpeed={0.15} enableZoom={false} enablePan={false} enableDamping dampingFactor={0.05} />
         </Canvas>
-      </div>
+      )}
 
       <div
         className="absolute inset-0 z-10 pointer-events-none"
         style={{
-          background:
-            "radial-gradient(circle at 50% 42%, rgba(2,4,8,0.12) 0%, rgba(2,4,8,0.72) 58%, rgba(2,4,8,0.98) 100%)",
+          background: "radial-gradient(ellipse at center, transparent 40%, rgba(5,10,10,0.85) 100%)",
         }}
       />
 
       <div
-        className="absolute inset-0 z-20 pointer-events-none opacity-35"
+        className="absolute inset-0 z-20 pointer-events-none"
         style={{
           background:
-            "radial-gradient(circle at 24% 22%, rgba(91,142,240,0.12), transparent 34%), radial-gradient(circle at 76% 74%, rgba(52,211,153,0.1), transparent 36%)",
+            "linear-gradient(to bottom, rgba(5,10,10,0.12) 0%, rgba(5,10,10,0.02) 28%, rgba(5,10,10,0.18) 100%)",
         }}
-      />
-
-      <div
-        className="absolute inset-0 opacity-[0.022] pointer-events-none mix-blend-overlay z-30"
-        style={{ backgroundImage: 'url("https://grainy-gradients.vercel.app/noise.svg")' }}
       />
     </div>
   );
