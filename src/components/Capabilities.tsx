@@ -8,8 +8,8 @@ const LAYERS = [
   {
     id: "01",
     label: "Core Layer",
-    title: "AI Workflow Orchestration",
-    desc: "Deterministic routing logic replaces manual decision trees with continuously evaluated intelligence flows.",
+    title: "Workflow Orchestration",
+    desc: "Inbound work is classified, routed, and prepared for the right model, tool, or human review path.",
     accent: "#5B8EF0",
     tags: ["LLM Routing", "RAG Pipelines", "Vector Retrieval"],
     icon: "◈",
@@ -18,7 +18,7 @@ const LAYERS = [
     id: "02",
     label: "Automation Layer",
     title: "Process Automation",
-    desc: "Fragmented APIs and tools unify into silent, continuous background processes that run without human intervention.",
+    desc: "Repeated decisions become durable background workflows with clear states, fallbacks, and audit trails.",
     accent: "#8B6CF0",
     tags: ["API Integration", "Event Streaming", "Kafka"],
     icon: "◎",
@@ -27,7 +27,7 @@ const LAYERS = [
     id: "03",
     label: "Infrastructure Layer",
     title: "Cloud Architecture",
-    desc: "Scalable AWS and GCP infrastructure purpose-built for low-latency AI inference and secure data pipelines.",
+    desc: "AWS and GCP services are shaped around latency, privacy, observability, and predictable production cost.",
     accent: "#3DB8F5",
     tags: ["AWS Lambda", "GCP Vertex", "Terraform"],
     icon: "◇",
@@ -36,7 +36,7 @@ const LAYERS = [
     id: "04",
     label: "Intelligence Layer",
     title: "Operational Intelligence",
-    desc: "Real-time observability into every workflow, routing decision, and system health metric across your stack.",
+    desc: "Every decision, exception, and service health signal is visible, measurable, and ready for improvement.",
     accent: "#34D399",
     tags: ["Monitoring", "Alerts", "Dashboards"],
     icon: "○",
@@ -108,17 +108,16 @@ export default function Capabilities() {
 
       <div className="container relative z-10">
         {/* Header */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-9 md:mb-10">
           <div className="lg:col-span-6 cap-header">
             <div className="t-label tracking-widest uppercase opacity-70 mb-5">System Architecture</div>
             <h2 className="t-h2 text-balance font-serif" style={{ fontSize: "clamp(2rem, 4vw, 3.5rem)" }}>
-              One coherent<br />intelligence engine.
+              One operating layer<br />for AI execution.
             </h2>
           </div>
           <div className="lg:col-span-5 lg:col-start-8 flex items-end cap-header">
             <p className="t-body opacity-80" style={{ fontSize: "1.05rem" }}>
-              Four operational layers. Each one engineered to feed into the next,
-              forming a single autonomous system that thinks, routes, and executes.
+              Four practical layers connect intake, reasoning, execution, and monitoring into one production system.
             </p>
           </div>
         </div>
@@ -136,7 +135,7 @@ export default function Capabilities() {
           {LAYERS.map((layer, i) => (
             <div
               key={layer.id}
-              className="cap-card relative grid grid-cols-1 lg:grid-cols-12 gap-6 pb-8 pt-6"
+              className="cap-card relative grid grid-cols-1 lg:grid-cols-12 gap-6 pb-5 pt-5"
               style={{ willChange: "transform" }}
             >
               {/* Left: node + connector */}
@@ -190,11 +189,11 @@ export default function Capabilities() {
                   <div className="flex items-start justify-between mb-5 gap-4">
                     <div className="flex items-center gap-4">
                       <span className="text-2xl opacity-60" style={{ color: layer.accent }}>
-                        {layer.icon}
+                        {layer.id}
                       </span>
                       <div>
                         <div className="t-mono text-[10px] uppercase tracking-widest mb-1" style={{ color: layer.accent }}>
-                          {layer.id} — {layer.label}
+                          {layer.id} / {layer.label}
                         </div>
                         <h3 className="font-serif font-medium" style={{ fontSize: "1.3rem", color: "#EEF2F8" }}>
                           {layer.title}

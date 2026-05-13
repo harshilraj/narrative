@@ -1,141 +1,179 @@
 "use client";
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
 
-// ── CONCEPT: THE INVISIBLE LOOM ──────────────────────────────────────────
-// Represents Narrative AI as a vast, ethereal tapestry of intelligence.
-// Instead of hard grids or particles, we use fine "Data Threads" and 
-// volumetric "Intelligence Shards" that drift in a digital void.
+type Node = {
+  id: string;
+  label: string;
+  position: [number, number, number];
+  color: string;
+};
 
-// 1. DATA THREADS SHADER
-const threadVertexShader = `
-  uniform float uTime;
-  uniform float uProgress;
-  attribute float aSize;
-  varying float vOpacity;
+type Edge = {
+  from: string;
+  to: string;
+  color: string;
+};
 
-  void main() {
-    vec3 pos = position;
+const NODES: Node[] = [
+  { id: "crm", label: "CRM", position: [-28, 12, -10], color: "#5B8EF0" },
+  { id: "docs", label: "DOCS", position: [-28, 2, -7], color: "#5B8EF0" },
+  { id: "erp", label: "ERP", position: [-28, -8, -11], color: "#5B8EF0" },
+  { id: "intake", label: "INTAKE", position: [-10, 5, -3], color: "#8B6CF0" },
+  { id: "policy", label: "POLICY", position: [2, 12, -6], color: "#8B6CF0" },
+  { id: "rag", label: "RAG", position: [2, 0, -2], color: "#3DB8F5" },
+  { id: "review", label: "REVIEW", position: [2, -12, -6], color: "#F59E0B" },
+  { id: "action", label: "ACTION", position: [18, 5, -5], color: "#34D399" },
+  { id: "monitor", label: "MONITOR", position: [18, -8, -9], color: "#34D399" },
+  { id: "archive", label: "AUDIT", position: [30, -1, -13], color: "#3DB8F5" },
+];
 
-    // Slow, drifting woven motion
-    pos.x += sin(uTime * 0.2 + pos.y * 0.1) * 2.0;
-    pos.z += cos(uTime * 0.1 + pos.x * 0.1) * 1.5;
+const EDGES: Edge[] = [
+  { from: "crm", to: "intake", color: "#5B8EF0" },
+  { from: "docs", to: "intake", color: "#5B8EF0" },
+  { from: "erp", to: "intake", color: "#5B8EF0" },
+  { from: "intake", to: "policy", color: "#8B6CF0" },
+  { from: "intake", to: "rag", color: "#3DB8F5" },
+  { from: "intake", to: "review", color: "#F59E0B" },
+  { from: "policy", to: "action", color: "#34D399" },
+  { from: "rag", to: "action", color: "#34D399" },
+  { from: "review", to: "monitor", color: "#F59E0B" },
+  { from: "action", to: "monitor", color: "#34D399" },
+  { from: "monitor", to: "archive", color: "#3DB8F5" },
+  { from: "action", to: "archive", color: "#3DB8F5" },
+];
 
-    // Vertical drift based on scroll
-    pos.y += uProgress * 25.0;
+function buildNodeMap() {
+  return new Map(NODES.map((node) => [node.id, new THREE.Vector3(...node.position)]));
+}
 
-    vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-    
-    // Threads are very fine and fade into the distance
-    vOpacity = smoothstep(-50.0, -5.0, mvPosition.z) * 0.2;
-    
-    gl_PointSize = aSize * (300.0 / -mvPosition.z);
-    gl_Position = projectionMatrix * mvPosition;
-  }
-`;
+function OperationsTopology({ progress }: { progress: number }) {
+  const groupRef = useRef<THREE.Group>(null);
+  const packetRef = useRef<THREE.Points>(null);
 
-const threadFragmentShader = `
-  varying float vOpacity;
-  uniform vec3 uColor;
+  const nodeMap = useMemo(buildNodeMap, []);
 
-  void main() {
-    // Sharp, line-like particles
-    float dist = distance(gl_PointCoord, vec2(0.5, 0.5));
-    if (dist > 0.45) discard;
-    
-    gl_FragColor = vec4(uColor, vOpacity);
-  }
-`;
+  const lineObject = useMemo(() => {
+    const positions: number[] = [];
+    const colors: number[] = [];
 
-// 2. INTELLIGENCE SHARDS (Volumetric Light)
-const shardVertexShader = `
-  varying vec2 vUv;
-  uniform float uProgress;
-  void main() {
-    vUv = uv;
-    vec3 pos = position;
-    pos.y += uProgress * 10.0;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-  }
-`;
+    EDGES.forEach((edge) => {
+      const from = nodeMap.get(edge.from);
+      const to = nodeMap.get(edge.to);
+      if (!from || !to) return;
 
-const shardFragmentShader = `
-  varying vec2 vUv;
-  uniform float uTime;
-  uniform vec3 uColor;
+      const color = new THREE.Color(edge.color);
+      positions.push(from.x, from.y, from.z, to.x, to.y, to.z);
+      colors.push(color.r, color.g, color.b, color.r, color.g, color.b);
+    });
 
-  void main() {
-    float strength = distance(vUv, vec2(0.5));
-    strength = 1.0 - strength;
-    strength = pow(strength, 4.0);
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
 
-    // Flickering, ethereal light
-    float flicker = sin(uTime * 0.5) * 0.1 + 0.9;
-    
-    gl_FragColor = vec4(uColor, strength * flicker * 0.15);
-  }
-`;
+    const material = new THREE.LineBasicMaterial({
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.22,
+      blending: THREE.AdditiveBlending,
+    });
 
-function InvisibleLoom({ progress }: { progress: number }) {
-  const pointsRef = useRef<THREE.Points>(null);
-  const shardsRef = useRef<THREE.Group>(null);
-  const count = 12000;
-  
-  const { positions, sizes } = useMemo(() => {
-    const pos = new Float32Array(count * 3);
-    const sz = new Float32Array(count);
-    for (let i = 0; i < count; i++) {
-      pos[i * 3] = (Math.random() - 0.5) * 100;
-      pos[i * 3 + 1] = (Math.random() - 0.5) * 80;
-      pos[i * 3 + 2] = (Math.random() - 0.5) * 40 - 10;
-      sz[i] = Math.random() * 0.8 + 0.1; // Extremely fine
-    }
-    return { positions: pos, sizes: sz };
+    return new THREE.LineSegments(geometry, material);
+  }, [nodeMap]);
+
+  const nodeObject = useMemo(() => {
+    const positions: number[] = [];
+    const colors: number[] = [];
+
+    NODES.forEach((node) => {
+      const color = new THREE.Color(node.color);
+      positions.push(...node.position);
+      colors.push(color.r, color.g, color.b);
+    });
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+
+    const material = new THREE.PointsMaterial({
+      size: 0.55,
+      transparent: true,
+      opacity: 0.85,
+      vertexColors: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      sizeAttenuation: true,
+    });
+
+    return new THREE.Points(geometry, material);
   }, []);
 
-  const uniforms = useMemo(() => ({
-    uTime: { value: 0 },
-    uProgress: { value: 0 },
-    uColor: { value: new THREE.Color("#EEF2F8") },
-    uShardColor: { value: new THREE.Color("#4F46E5") }
-  }), []);
+  const packets = useMemo(() => {
+    const count = EDGES.length * 4;
+    const positions = new Float32Array(count * 3);
+    const colors = new Float32Array(count * 3);
+    const config = Array.from({ length: count }, (_, index) => {
+      const edgeIndex = index % EDGES.length;
+      const offset = Math.floor(index / EDGES.length) / 4;
+      const color = new THREE.Color(EDGES[edgeIndex].color);
+      colors[index * 3] = color.r;
+      colors[index * 3 + 1] = color.g;
+      colors[index * 3 + 2] = color.b;
+      return { edgeIndex, offset };
+    });
+
+    return { positions, colors, config };
+  }, []);
 
   useFrame((state) => {
-    if (!pointsRef.current || !shardsRef.current) return;
-    uniforms.uTime.value = state.clock.elapsedTime;
-    uniforms.uProgress.value = THREE.MathUtils.lerp(uniforms.uProgress.value, progress, 0.05);
+    if (!packetRef.current || !groupRef.current) return;
 
-    shardsRef.current.rotation.z = state.clock.elapsedTime * 0.05;
+    const elapsed = state.clock.elapsedTime;
+    const positions = packetRef.current.geometry.attributes.position.array as Float32Array;
+
+    packets.config.forEach((packet, index) => {
+      const edge = EDGES[packet.edgeIndex];
+      const from = nodeMap.get(edge.from);
+      const to = nodeMap.get(edge.to);
+      if (!from || !to) return;
+
+      const phase = (elapsed * 0.16 + packet.offset + packet.edgeIndex * 0.035) % 1;
+      const eased = phase * phase * (3 - 2 * phase);
+      const x = THREE.MathUtils.lerp(from.x, to.x, eased);
+      const y = THREE.MathUtils.lerp(from.y, to.y, eased);
+      const z = THREE.MathUtils.lerp(from.z, to.z, eased);
+
+      positions[index * 3] = x;
+      positions[index * 3 + 1] = y;
+      positions[index * 3 + 2] = z;
+    });
+
+    packetRef.current.geometry.attributes.position.needsUpdate = true;
+    groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, -0.28 + progress * 0.5, 0.04);
+    groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, 0.08 - progress * 0.12, 0.04);
+    groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, progress * 5 - 2, 0.04);
   });
 
   return (
-    <group>
-      {/* 1. Fine Data Threads */}
-      <points ref={pointsRef}>
+    <group ref={groupRef}>
+      <primitive object={lineObject} />
+      <primitive object={nodeObject} />
+      <points ref={packetRef}>
         <bufferGeometry>
-          <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
-          <bufferAttribute attach="attributes-aSize" count={count} array={sizes} itemSize={1} />
+          <bufferAttribute attach="attributes-position" count={packets.positions.length / 3} array={packets.positions} itemSize={3} />
+          <bufferAttribute attach="attributes-color" count={packets.colors.length / 3} array={packets.colors} itemSize={3} />
         </bufferGeometry>
-        <shaderMaterial 
-          transparent depthWrite={false} blending={THREE.AdditiveBlending}
-          vertexShader={threadVertexShader} fragmentShader={threadFragmentShader} uniforms={uniforms}
+        <pointsMaterial
+          size={0.28}
+          transparent
+          opacity={0.75}
+          vertexColors
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          sizeAttenuation
         />
       </points>
-
-      {/* 2. Intelligence Shards */}
-      <group ref={shardsRef}>
-        {[...Array(5)].map((_, i) => (
-          <mesh key={i} position={[(i - 2) * 15, 0, -15]} rotation={[0, 0, i * 0.5]}>
-            <planeGeometry args={[10, 40]} />
-            <shaderMaterial 
-              transparent depthWrite={false} blending={THREE.AdditiveBlending}
-              vertexShader={shardVertexShader} fragmentShader={shardFragmentShader}
-              uniforms={{ uTime: uniforms.uTime, uProgress: uniforms.uProgress, uColor: uniforms.uShardColor }}
-            />
-          </mesh>
-        ))}
-      </group>
     </group>
   );
 }
@@ -156,33 +194,32 @@ export default function GlobalEnvironment() {
 
   return (
     <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#020408]">
-      
-      {/* 3D Invisible Loom Layer */}
       <div className="absolute inset-0 z-0">
-        <Canvas camera={{ position: [0, 0, 30], fov: 45 }}>
-          <fog attach="fog" args={["#020408", 15, 50]} />
-          <InvisibleLoom progress={progress} />
+        <Canvas camera={{ position: [0, 0, 34], fov: 48 }} gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}>
+          <fog attach="fog" args={["#020408", 18, 58]} />
+          <OperationsTopology progress={progress} />
         </Canvas>
       </div>
 
-      {/* 2. Deep Atmospheric Shield */}
-      <div className="absolute inset-0 z-10 pointer-events-none" 
-        style={{ 
-          background: `radial-gradient(circle at 50% 50%, rgba(2,4,8,0.1) 0%, rgba(2,4,8,0.98) 100%)`,
-        }} 
+      <div
+        className="absolute inset-0 z-10 pointer-events-none"
+        style={{
+          background: "radial-gradient(circle at 50% 40%, rgba(2,4,8,0.22) 0%, rgba(2,4,8,0.82) 58%, rgba(2,4,8,0.98) 100%)",
+        }}
       />
 
-      {/* 3. Subtle Lens Flare / Signal Bursts */}
-      <div className="absolute inset-0 z-20 pointer-events-none opacity-20"
-        style={{ 
-          background: `radial-gradient(circle at 20% 30%, rgba(79,70,229,0.15) 0%, transparent 40%),
-                       radial-gradient(circle at 80% 70%, rgba(139,108,240,0.1) 0%, transparent 40%)` 
-        }} 
+      <div
+        className="absolute inset-0 z-20 pointer-events-none opacity-30"
+        style={{
+          background:
+            "linear-gradient(90deg, rgba(91,142,240,0.08), transparent 26%, transparent 72%, rgba(52,211,153,0.08)), radial-gradient(circle at 55% 35%, rgba(61,184,245,0.08), transparent 38%)",
+        }}
       />
 
-      {/* 4. Infrastructure Grain */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay z-30"
-        style={{ backgroundImage: 'url("https://grainy-gradients.vercel.app/noise.svg")' }} />
+      <div
+        className="absolute inset-0 opacity-[0.025] pointer-events-none mix-blend-overlay z-30"
+        style={{ backgroundImage: 'url("https://grainy-gradients.vercel.app/noise.svg")' }}
+      />
     </div>
   );
 }

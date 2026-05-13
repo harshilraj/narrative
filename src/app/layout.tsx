@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Narrative AI — Intelligent Infrastructure for Modern Operations",
-  description: "Narrative AI designs orchestration layers, AI workflows, and cloud systems that eliminate manual complexity and help businesses operate autonomously.",
+  title: "Narrative AI | Production AI Systems for Modern Operations",
+  description: "Narrative AI designs workflow routing, AI automation, and cloud systems that turn fragmented operations into reliable production execution.",
   keywords: "AI systems, workflow automation, cloud architecture, AWS, GCP, LLM orchestration, RAG pipeline, AI infrastructure",
   openGraph: {
-    title: "Narrative AI — Intelligent Infrastructure",
-    description: "Build systems that think, route, and operate autonomously.",
+    title: "Narrative AI | Production AI Systems",
+    description: "Build AI systems that route work, automate decisions, and keep operations visible.",
     type: "website",
   },
 };

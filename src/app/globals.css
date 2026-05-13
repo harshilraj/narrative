@@ -42,10 +42,10 @@
   --text-5xl:  4.5rem;     /* 72px */
   --text-6xl:  6rem;       /* 96px */
 
-  /* Spacing - Tightened for immersion */
-  --space-section: 6rem;   /* Reduced from 9rem */
-  --space-block:   4rem;   /* Reduced from 5rem */
-  --space-group:   2rem;   /* Reduced from 2.5rem */
+  /* Spacing */
+  --space-section: clamp(3.5rem, 6vw, 5rem);
+  --space-block:   clamp(2.5rem, 4vw, 3.25rem);
+  --space-group:   1.5rem;
 
   /* Motion - Slower, more cinematic */
   --ease-out:   cubic-bezier(0.16, 1, 0.3, 1);
@@ -181,25 +181,15 @@ body {
   /* GPU-accelerate all sections for smooth parallax */
   will-change: transform;
   transform: translate3d(0, 0, 0);
-  /* No hard background — GlobalEnvironment shines through */
+  /* No hard background so GlobalEnvironment shines through */
   background: transparent;
 }
 
-/* Atmospheric carryover - ensuring seamless transitions */
-.section::before {
-  content: '';
-  position: absolute;
-  top: -120px;
-  left: 0;
-  right: 0;
-  height: 120px;
-  background: linear-gradient(to bottom, transparent, transparent);
-  pointer-events: none;
-  z-index: 1;
+@media (max-width: 640px) {
+  .section {
+    padding: 3rem 0;
+  }
 }
-
-/* REMOVED .section-border — causes visible seam lines */
-/* Use data-section-fade for atmospheric transitions instead */
 
 /* ══════════════════════════════════════
    INTERACTIVE ELEMENTS

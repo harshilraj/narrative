@@ -140,30 +140,30 @@ const STUDIES = [
     id: "fintech",
     industry: "Financial Services",
     client: "Tier-1 Regulatory Compliance",
-    challenge: "Manual review of 10,000+ daily regulatory documents created a 4-hour processing lag and immense compliance overhead. Legacy parsers consistently failed on edge cases.",
+    challenge: "Manual review of 10,000+ daily regulatory documents created a 4-hour processing lag. Legacy parsers missed edge cases and forced senior reviewers into repetitive triage.",
     architecture: "Multi-Agent RAG Pipeline on AWS",
     technical: [
-      "Vector embeddings using precise models stored in Pinecone.",
-      "Parallel LLM evaluation agents cross-verifying compliance clauses.",
-      "Kafka event streaming to process documents instantly upon ingestion.",
-      "Deterministic fallback logic to guarantee absolute precision on critical fields."
+      "Vector search retrieves the exact clauses needed for review.",
+      "Parallel evaluation agents compare evidence before a decision is accepted.",
+      "Kafka streams begin processing the moment a document is ingested.",
+      "Fallback rules send critical fields to review when confidence drops."
     ],
-    impact: ["0.82s execution latency per document", "Fully autonomous compliance pipeline", "Significant operational overhead removed"],
+    impact: ["0.82s execution latency per document", "Compliance triage runs without manual sorting", "Senior reviewers focus on high-risk exceptions"],
     diagram: <ComplianceDiagram />,
   },
   {
     id: "logistics",
     industry: "Supply Chain & Logistics",
     client: "Global Freight Routing Matrix",
-    challenge: "Alert fragmentation across WMS, TMS, and ERP platforms created a 24-hour response lag to supply chain exceptions. This resulted in consistent missed delivery SLAs.",
+    challenge: "Alerts were scattered across WMS, TMS, and ERP platforms, creating a 24-hour lag on supply chain exceptions and missed delivery SLAs.",
     architecture: "Autonomous Event Router on GCP",
     technical: [
-      "Vertex AI endpoints structured for strict exception classification.",
-      "Pub/Sub streams aggregating disparate legacy systems into a unified event bus.",
-      "Dynamic routing logic evaluating SLA risk and auto-dispatching carrier APIs.",
-      "Human-in-the-loop escalation systems built exclusively for high-risk anomalies."
+      "Vertex AI classifies exceptions with strict output contracts.",
+      "Pub/Sub gathers legacy system events into one reliable event bus.",
+      "Routing logic evaluates SLA risk before dispatching carrier APIs.",
+      "Escalation paths stay reserved for high-risk anomalies."
     ],
-    impact: ["12s exception resolution", "82% alerts resolved autonomously", "Unified data stream for strict audit logging"],
+    impact: ["12s average exception resolution", "82% of alerts resolved without manual routing", "One audit trail across warehouse, transport, and ERP events"],
     diagram: <LogisticsDiagram />,
   },
 ];
@@ -203,16 +203,16 @@ export default function CaseStudies() {
 
       <div className="container relative z-10">
 
-        <div className="mb-16 flex flex-col items-center text-center max-w-3xl mx-auto">
+        <div className="mb-10 md:mb-12 flex flex-col items-center text-center max-w-3xl mx-auto">
           <div className="t-label tracking-widest uppercase opacity-60 mb-5 section-title-reveal">System Showcases</div>
           <h2 className="t-h2 section-title-reveal text-balance font-serif" style={{ fontSize: "clamp(2.5rem, 4.5vw, 3.8rem)", lineHeight: 1.05 }}>
-            Intelligence infrastructure<br />in production.
+            Production systems,<br />not prototype theater.
           </h2>
         </div>
 
-        <div className="flex flex-col gap-24">
+        <div className="flex flex-col gap-14 md:gap-16">
           {STUDIES.map((study, idx) => (
-            <div key={study.id} className="case-block grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+            <div key={study.id} className="case-block grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
 
               {/* Architecture Diagram */}
               <div className={`lg:col-span-7 ${idx % 2 === 1 ? "lg:order-last" : ""} case-reveal`}>
@@ -228,7 +228,7 @@ export default function CaseStudies() {
               </div>
 
               {/* Content */}
-              <div className={`lg:col-span-5 ${idx % 2 === 1 ? "lg:order-first" : ""} flex flex-col gap-8`}>
+              <div className={`lg:col-span-5 ${idx % 2 === 1 ? "lg:order-first" : ""} flex flex-col gap-6`}>
 
                 <div className="case-reveal">
                   <div className="t-label mb-4 opacity-50 uppercase tracking-widest">{study.industry}</div>

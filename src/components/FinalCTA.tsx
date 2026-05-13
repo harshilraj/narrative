@@ -33,22 +33,22 @@ export default function FinalCTA() {
       <div className="container relative z-10">
         <div className="max-w-3xl mx-auto flex flex-col items-center text-center cta-content">
 
-          <div className="t-label tracking-widest uppercase opacity-70 mb-6">Begin Orchestration</div>
+          <div className="t-label tracking-widest uppercase opacity-70 mb-5">Start With The Operating Map</div>
 
-          <h2 className="t-h2 text-balance mb-8 font-serif" style={{ fontSize: "clamp(2.5rem, 5vw, 4rem)", lineHeight: 1.1 }}>
-            Operational intelligence should feel invisible.
+          <h2 className="t-h2 text-balance mb-6 font-serif" style={{ fontSize: "clamp(2.25rem, 5vw, 3.7rem)", lineHeight: 1.1 }}>
+            Build the layer your operations keep asking for.
           </h2>
 
-          <p className="t-body text-center mb-12 opacity-80" style={{ maxWidth: "440px", margin: "0 auto 3rem", fontSize: "1.05rem" }}>
-            The best-built systems run silently in the background. We replace operational complexity with architecture that thinks for itself.
+          <p className="t-body text-center opacity-80" style={{ maxWidth: "500px", margin: "0 auto 2.25rem", fontSize: "1.05rem" }}>
+            We turn fragmented workflows into an AI-ready system with clear routing, review logic, monitoring, and deployment controls.
           </p>
 
-          <div className="flex flex-wrap gap-4 justify-center mb-16">
+          <div className="flex flex-wrap gap-4 justify-center mb-10 md:mb-12">
             <a href="mailto:hello@narrative-ai.com" className="btn-primary" style={{ padding: "16px 36px", fontSize: "0.9375rem" }}>
-              Get in Touch
+              Plan My System
             </a>
-            <a href="#capabilities" className="btn-ghost" style={{ padding: "16px 36px", fontSize: "0.9375rem" }}>
-              Explore Systems
+            <a href="#infrastructure" className="btn-ghost" style={{ padding: "16px 36px", fontSize: "0.9375rem" }}>
+              Explore The Layers
             </a>
           </div>
 
@@ -56,12 +56,12 @@ export default function FinalCTA() {
           <div className="flex flex-wrap items-center justify-center gap-6 opacity-50">
             <div className="flex items-center gap-2">
               <div className="status-dot" style={{ width: 6, height: 6, boxShadow: "0 0 8px var(--success)" }} />
-              <span className="t-mono uppercase tracking-widest" style={{ fontSize: "11px" }}>128 workflows operational</span>
+              <span className="t-mono uppercase tracking-widest" style={{ fontSize: "11px" }}>128 workflows mapped</span>
             </div>
             <div className="w-px h-3 bg-white opacity-20" />
             <span className="t-mono uppercase tracking-widest" style={{ fontSize: "11px" }}>SOC 2 Type II</span>
             <div className="w-px h-3 bg-white opacity-20" />
-            <span className="t-mono uppercase tracking-widest" style={{ fontSize: "11px" }}>AWS · GCP · Azure</span>
+            <span className="t-mono uppercase tracking-widest" style={{ fontSize: "11px" }}>AWS / GCP / Azure</span>
           </div>
 
         </div>

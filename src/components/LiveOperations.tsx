@@ -52,7 +52,7 @@ const OPS = [
     id: "routing",
     status: "ACTIVE",
     label: "AI Routing Layer",
-    desc: "Processing inbound logic streams across 14 tenant workspaces",
+    desc: "Classifying requests, assigning owners, and preparing context across 14 workspaces",
     metric: "Efficiency Gain",
     value: 63,
     unit: "%",
@@ -64,7 +64,7 @@ const OPS = [
     id: "resolution",
     status: "ACTIVE",
     label: "Autonomous Resolution Engine",
-    desc: "Handling exception fallbacks and escalation routing",
+    desc: "Resolving routine exceptions and escalating only the cases that need judgment",
     metric: "Manual Intervention",
     value: 82,
     unit: "% removed",
@@ -76,7 +76,7 @@ const OPS = [
     id: "workflow",
     status: "ACTIVE",
     label: "Workflow Processing Grid",
-    desc: "Synchronizing event streams across AWS Lambda & GCP Pub/Sub",
+    desc: "Synchronizing event streams across AWS Lambda and GCP Pub/Sub",
     metric: "Execution Latency",
     value: 0.8,
     unit: "s",
@@ -88,7 +88,7 @@ const OPS = [
     id: "infra",
     status: "ACTIVE",
     label: "Infrastructure Health Monitor",
-    desc: "Watching 47 microservices across 3 cloud regions",
+    desc: "Monitoring 47 services across three cloud regions with health checks and alerts",
     metric: "Uptime Stability",
     value: 99.98,
     unit: "%",
@@ -152,10 +152,10 @@ export default function LiveOperations() {
       <div className="container relative z-10">
 
         {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-12 ops-header">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-9 md:mb-10 ops-header">
           <div>
             <div className="t-label tracking-widest uppercase opacity-70 mb-4">Operational Status</div>
-            <h2 className="t-h2 font-serif text-balance" style={{ fontSize: "clamp(2rem, 4vw, 3.5rem)" }}>Live operations center.</h2>
+            <h2 className="t-h2 font-serif text-balance" style={{ fontSize: "clamp(2rem, 4vw, 3.5rem)" }}>Live execution center.</h2>
           </div>
           <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-5 py-2.5 rounded-full backdrop-blur-md">
             <div className="status-dot w-2 h-2 rounded-full" style={{ boxShadow: "0 0 8px var(--success)" }} />

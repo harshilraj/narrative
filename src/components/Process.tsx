@@ -9,7 +9,7 @@ const STEPS = [
     num: "01",
     phase: "System Analysis",
     title: "Discovery",
-    desc: "We map every manual workflow, API boundary, and data flow to establish precise architectural intent.",
+    desc: "We map the manual paths, system boundaries, data sources, and failure points that shape the build.",
     detail: ["Process interviews", "Workflow mapping", "Bottleneck analysis", "Integration audit"],
     accent: "#5B8EF0",
     status: "ANALYZING",
@@ -18,7 +18,7 @@ const STEPS = [
     num: "02",
     phase: "Architecture Mapping",
     title: "Blueprint",
-    desc: "A complete system architecture before a single line of code. You see exactly how AI models, databases, and APIs interact.",
+    desc: "You see how models, databases, APIs, queues, and reviews connect before implementation starts.",
     detail: ["System diagrams", "AI stack selection", "Infrastructure plan", "Cost modelling"],
     accent: "#8B6CF0",
     status: "MAPPING",
@@ -27,7 +27,7 @@ const STEPS = [
     num: "03",
     phase: "AI Workflow Construction",
     title: "Build",
-    desc: "Parallel tracks for AI orchestration, cloud infrastructure, and integration layers built for determinism and observability.",
+    desc: "AI orchestration, cloud services, and integrations move in parallel with deterministic behavior and logs.",
     detail: ["LLM orchestration", "API integration", "Cloud provisioning", "CI/CD pipelines"],
     accent: "#3DB8F5",
     status: "CONSTRUCTING",
@@ -36,7 +36,7 @@ const STEPS = [
     num: "04",
     phase: "Infrastructure Deployment",
     title: "Deployment",
-    desc: "Zero-downtime rollout with canary testing and staged activation. Full monitoring established before go-live.",
+    desc: "Staged activation with canary testing, rollback plans, and monitoring in place before go-live.",
     detail: ["Staged rollout", "Load testing", "Health monitoring", "Runbook creation"],
     accent: "#F59E0B",
     status: "DEPLOYING",
@@ -45,7 +45,7 @@ const STEPS = [
     num: "05",
     phase: "Autonomous Optimization",
     title: "Optimization",
-    desc: "Continuous latency reduction, prompt refinement, and cost optimization. The system improves autonomously.",
+    desc: "Latency, prompts, routing rules, and cost profiles are reviewed against real production behavior.",
     detail: ["Model evaluation", "Prompt tuning", "Cost analysis", "Performance reviews"],
     accent: "#34D399",
     status: "OPTIMIZING",
@@ -155,14 +155,13 @@ export default function Process() {
 
       <div className="container relative z-10">
         {/* Header */}
-        <div className="mb-16 process-header">
+        <div className="mb-10 md:mb-12 process-header">
           <div className="t-label tracking-widest uppercase opacity-70 mb-4">Deployment Sequence</div>
           <h2 className="t-h2 font-serif text-balance" style={{ fontSize: "clamp(2rem, 3.5vw, 3.2rem)" }}>
-            An evolving<br />orchestration pipeline.
+            A clear path from<br />audit to production.
           </h2>
           <p className="t-body opacity-70 mt-4 max-w-xl" style={{ fontSize: "1.05rem" }}>
-            Not a timeline. A live sequence of infrastructure states that activates progressively,
-            layer by layer, until your system operates autonomously.
+            Each phase turns uncertainty into working infrastructure, with visible checkpoints and production controls.
           </p>
         </div>
 
@@ -185,7 +184,7 @@ export default function Process() {
             />
           </div>
 
-          <div className="flex flex-col gap-12 relative">
+          <div className="flex flex-col gap-8 md:gap-10 relative">
             {STEPS.map((step, i) => (
               <div
                 key={step.num}
