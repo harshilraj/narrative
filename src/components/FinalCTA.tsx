@@ -26,26 +26,26 @@ export default function FinalCTA() {
       {/* Atmospheric depth */}
       <div className="absolute inset-0 pointer-events-none z-0">
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(91,142,240,0.04) 0%, transparent 60%)" }} />
+          style={{ background: "radial-gradient(circle, rgba(139,127,255,0.08) 0%, transparent 60%)" }} />
         <div className="absolute inset-0 grid-bg-fine opacity-30" />
       </div>
 
       <div className="container relative z-10">
         <div className="glass-card max-w-3xl mx-auto flex flex-col items-center text-center cta-content">
 
-          <div className="t-label tracking-widest uppercase opacity-70 mb-5">Start With The Operating Map</div>
+          <div className="section-eyebrow mb-5">Start With The Operating Map</div>
 
           <h2 className="t-h2 text-balance mb-6 font-serif" style={{ fontSize: "clamp(2.25rem, 5vw, 3.7rem)", lineHeight: 1.1 }}>
-            Build the layer your operations keep asking for.
+            Build the system your operations already need.
           </h2>
 
           <p className="t-body text-center opacity-80" style={{ maxWidth: "500px", margin: "0 auto 2.25rem", fontSize: "1.05rem" }}>
-            We turn fragmented workflows into an AI-ready system with clear routing, review logic, monitoring, and deployment controls.
+            We connect the signals, decisions, and actions that keep daily work moving.
           </p>
 
           <div className="flex flex-wrap gap-4 justify-center mb-10 md:mb-12">
             <a href="mailto:hello@narrative-ai.com" className="btn-primary" style={{ padding: "16px 36px", fontSize: "0.9375rem" }}>
-              Plan My System
+              Build My System
             </a>
             <a href="#infrastructure" className="btn-secondary" style={{ padding: "16px 36px", fontSize: "0.75rem" }}>
               Explore The Layers

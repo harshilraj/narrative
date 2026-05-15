@@ -14,7 +14,7 @@ export default function Nav() {
     <nav
       className="fixed top-0 left-0 right-0 z-[100] transition-all duration-500"
       style={{
-        background: scrolled ? "rgba(2, 6, 14, 0.85)" : "transparent",
+        background: scrolled ? "rgba(2, 1, 15, 0.86)" : "transparent",
         backdropFilter: scrolled ? "blur(20px)" : "none",
         borderBottom: scrolled ? "1px solid rgba(255,255,255,0.06)" : "1px solid transparent",
         transition: "all 0.4s ease",
@@ -32,13 +32,16 @@ export default function Nav() {
 
         {/* Links */}
         <div className="hidden md:flex items-center gap-8">
-          {["Infrastructure", "Process", "Results", "Case Studies"].map((l) => (
-            <a key={l}
-              href={`#${l.toLowerCase().replace(" ", "-")}`}
+          {[
+            { label: "HOW IT WORKS", href: "#process" },
+            { label: "DEPLOYMENT", href: "#results" },
+          ].map((link, index) => (
+            <a key={`${link.label}-${index}`}
+              href={link.href}
               className="t-small nav-link uppercase tracking-widest opacity-80 hover:opacity-100 transition-opacity"
               style={{ fontSize: "10px", fontFamily: "'DM Mono', monospace" }}
             >
-              {l}
+              {link.label}
             </a>
           ))}
         </div>

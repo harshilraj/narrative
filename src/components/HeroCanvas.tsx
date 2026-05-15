@@ -18,7 +18,7 @@ function FlowLayer({ layerIndex }: { layerIndex: number }) {
     const col = new Float32Array(count * 3);
     
     const colorA = new THREE.Color("#3DB8F5"); // cyan
-    const colorB = new THREE.Color("#8B6CF0"); // purple
+    const colorB = new THREE.Color("#8B7FFF");
     const colorC = new THREE.Color("#A78BFA"); // light purple/pink
     const tempColor = new THREE.Color();
 

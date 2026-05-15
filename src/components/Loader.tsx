@@ -148,19 +148,19 @@ export default function Loader({ onComplete }: { onComplete: () => void }) {
         className="relative z-20 flex flex-col items-center justify-center opacity-0 translate-y-12 blur-md"
       >
         <div className="flex flex-col items-center gap-1">
-          <div className="t-label text-[10px] tracking-[0.6em] text-[#8B6CF0] mb-4 opacity-80">
+          <div className="t-label text-[10px] tracking-[0.6em] text-[#8B7FFF] mb-4 opacity-80">
             Initializing Intelligence
           </div>
-          <div className="h-px w-24 bg-gradient-to-r from-transparent via-[#8B6CF0]/40 to-transparent mb-10"></div>
+          <div className="h-px w-24 bg-gradient-to-r from-transparent via-[#8B7FFF]/40 to-transparent mb-10"></div>
           
           <h1 className="text-3xl font-serif text-white tracking-[0.2em] font-light">
             NARRATIVE AI
           </h1>
           
           <div className="mt-10 flex items-center gap-4">
-            <div className="w-1 h-1 rounded-full bg-[#8B6CF0] animate-pulse"></div>
-            <div className="w-1 h-1 rounded-full bg-[#8B6CF0] animate-pulse delay-75"></div>
-            <div className="w-1 h-1 rounded-full bg-[#8B6CF0] animate-pulse delay-150"></div>
+            <div className="w-1 h-1 rounded-full bg-[#8B7FFF] animate-pulse"></div>
+            <div className="w-1 h-1 rounded-full bg-[#8B7FFF] animate-pulse delay-75"></div>
+            <div className="w-1 h-1 rounded-full bg-[#8B7FFF] animate-pulse delay-150"></div>
           </div>
         </div>
       </div>

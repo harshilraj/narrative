@@ -1,38 +1,42 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { Fragment, useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
 
-const ARCHITECTURE = [
+const PANELS = [
   {
-    id: "01",
-    label: "DATA LAYER",
-    title: "Signal Intake",
-    items: ["Event Streams", "API Gateway", "Data Connectors", "Schema Normalization", "Queue Control"],
+    label: "01 / SIGNAL LAYER",
+    status: "INGESTING",
+    title: "Data Ingestion",
+    items: ["Event Streams", "API Webhooks", "Database Sync", "File Pipelines"],
+    stat: "2.4M",
+    statLabel: "events / day",
   },
   {
-    id: "02",
-    label: "INTELLIGENCE",
-    title: "Decision Core",
-    items: ["Model Router", "Context Store", "Decision Graph", "Policy Rules", "Confidence Scoring"],
+    label: "02 / INTELLIGENCE LAYER",
+    status: "REASONING",
+    title: "AI Orchestration",
+    items: ["Model Router", "Context Engine", "Decision Graph", "Memory Store"],
+    stat: "340ms",
+    statLabel: "avg decision time",
   },
   {
-    id: "03",
-    label: "EXECUTION",
-    title: "Action Layer",
-    items: ["Action Engine", "Audit Log", "Integrations", "Rollback Paths", "Human Review"],
+    label: "03 / EXECUTION LAYER",
+    status: "EXECUTING",
+    title: "Action Engine",
+    items: ["Workflow Triggers", "Integration Bus", "Audit Logger", "Rollback Guard"],
+    stat: "99.97%",
+    statLabel: "uptime",
   },
 ];
 
-function FlowArrow() {
+function Divider() {
   return (
-    <div className="architecture-arrow" aria-hidden="true">
-      <svg viewBox="0 0 150 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M4 12H136" stroke="rgba(0,255,178,0.38)" strokeWidth="1" strokeDasharray="5 8" />
-        <path d="M126 5L138 12L126 19" stroke="rgba(0,255,178,0.48)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-        <circle className="architecture-pulse" cx="8" cy="12" r="3" fill="#00FFB2" />
-      </svg>
+    <div className="architecture-divider" aria-hidden="true">
+      <div className="flow-orb">
+        <span className="font-mono text-[18px]">→</span>
+      </div>
     </div>
   );
 }
@@ -42,9 +46,8 @@ export default function Capabilities() {
 
   useEffect(() => {
     if (!sectionRef.current) return;
-    const elements = sectionRef.current.querySelectorAll(".architecture-reveal");
     gsap.fromTo(
-      elements,
+      sectionRef.current.querySelectorAll(".architecture-reveal"),
       { opacity: 0, y: 24, filter: "blur(4px)" },
       {
         opacity: 1,
@@ -59,48 +62,50 @@ export default function Capabilities() {
   }, []);
 
   return (
-    <section id="infrastructure" ref={sectionRef} className="section relative overflow-hidden">
+    <section id="infrastructure" ref={sectionRef} className="section architecture-shell">
       <div className="container relative z-10">
-        <div className="architecture-reveal mx-auto mb-9 max-w-3xl text-center">
-          <div className="t-label mb-3">03 / SYSTEM ARCHITECTURE</div>
-          <h2 className="font-serif text-white" style={{ fontSize: "42px", lineHeight: 1.06 }}>
-            One operating layer for AI execution.
+        <div className="architecture-reveal">
+          <div className="section-eyebrow mb-4">SYSTEM ARCHITECTURE</div>
+          <h2 className="section-title">
+            One operating layer.<br />
+            <span className="text-[var(--accent-bright)]">For AI execution.</span>
           </h2>
-          <p className="mt-2 font-mono text-[13px] tracking-[0.08em] text-white/50">
-            Signal → Intelligence → Execution, unified.
-          </p>
+          <div className="my-5 h-px w-full bg-white/10" />
         </div>
 
-        <div className="architecture-reveal architecture-flow">
-          {ARCHITECTURE.map((layer, index) => (
-            <div key={layer.id} className="architecture-stage">
-              <article className="architecture-card">
-                <div className="mb-7 flex items-start justify-between gap-4">
-                  <div>
-                    <span className="font-mono text-[10px] tracking-[0.16em] text-[#00FFB2]">{layer.id}</span>
-                    <div className="mt-3 font-mono text-[11px] tracking-[0.15em] text-[#00ffb2cc]">{layer.label}</div>
-                    <h3 className="mt-3 font-serif text-[22px] leading-tight text-white">{layer.title}</h3>
-                  </div>
-                  <span className="active-badge">ACTIVE</span>
+        <div className="architecture-reveal architecture-diagram">
+          {PANELS.map((panel, index) => (
+            <Fragment key={panel.label}>
+              <article className="architecture-panel">
+                <div className="architecture-panel-header">
+                  <span>{panel.label}</span>
+                  <span className="flex items-center gap-2 text-[8px]">
+                    <span className="pulse-dot" />
+                    {panel.status}
+                  </span>
                 </div>
 
-                <ul className="flex flex-col gap-4">
-                  {layer.items.map((item) => (
-                    <li key={item} className="flex items-center gap-3 font-mono text-[11px] tracking-[0.04em] text-white/65">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#00FFB2]" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </article>
-              {index < ARCHITECTURE.length - 1 && <FlowArrow />}
-            </div>
-          ))}
-        </div>
+                <div className="architecture-panel-body">
+                  <h3 className="font-serif text-[24px] leading-none text-white">{panel.title}</h3>
+                  <div className="mt-8 flex flex-col gap-5">
+                    {panel.items.map((item) => (
+                      <div key={item} className="architecture-item">{item}</div>
+                    ))}
+                  </div>
 
-        <p className="architecture-reveal mt-8 text-center font-mono text-[11px] uppercase tracking-[0.1em] text-white/30">
-          All layers observable. All decisions logged. All actions reversible.
-        </p>
+                  <div className="mt-auto">
+                    <div className="font-serif text-[48px] leading-none text-[var(--accent-bright)]">{panel.stat}</div>
+                    <div className="mt-2 font-mono text-[9px] uppercase tracking-[0.18em] text-white/40">{panel.statLabel}</div>
+                  </div>
+                </div>
+              </article>
+              {index < PANELS.length - 1 && <Divider />}
+            </Fragment>
+          ))}
+          <div className="architecture-bottom-bar">
+            Every signal processed. Every decision logged. Every action reversible.
+          </div>
+        </div>
       </div>
     </section>
   );

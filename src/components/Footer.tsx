@@ -14,7 +14,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="relative" style={{ background: "rgba(2,6,12,0.75)", paddingTop: "4.5rem", paddingBottom: "2.5rem", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+    <footer className="relative" style={{ background: "rgba(2,1,15,0.78)", paddingTop: "4.5rem", paddingBottom: "2.5rem", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
       <div className="container relative z-10">
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 mb-12 md:mb-14">
