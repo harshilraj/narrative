@@ -12,7 +12,7 @@ export default function Nav() {
 
   return (
     <nav
-      className="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
+      className="fixed top-0 left-0 right-0 z-[100] transition-all duration-500"
       style={{
         background: scrolled ? "rgba(2, 6, 14, 0.85)" : "transparent",
         backdropFilter: scrolled ? "blur(20px)" : "none",
@@ -45,13 +45,8 @@ export default function Nav() {
 
         <a
           href="#contact"
-          className="btn-primary hidden md:inline-flex"
+          className="btn-ghost hidden md:inline-flex"
           style={{
-            padding: "10px 20px",
-            fontSize: "12px",
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
-            fontFamily: "'DM Mono', monospace",
             background: scrolled ? "rgba(255,255,255,0.95)" : "#ffffff",
             boxShadow: scrolled ? "0 4px 20px rgba(0,0,0,0.3)" : undefined,
           }}

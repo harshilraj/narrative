@@ -235,7 +235,7 @@ export default function LiveOperations() {
 
                 {/* Action */}
                 <div className="lg:col-span-2 flex justify-end">
-                  <button className="btn-ghost t-mono" style={{ fontSize: "11px" }}>
+                  <button className="btn-secondary t-mono" style={{ fontSize: "10px", padding: "9px 20px" }}>
                     Inspect →
                   </button>
                 </div>

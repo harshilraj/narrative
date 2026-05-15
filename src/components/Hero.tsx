@@ -59,7 +59,7 @@ export default function Hero() {
             <a href="#contact" className="btn-primary text-[11px] uppercase" style={{ fontFamily: "'DM Mono', monospace" }}>
               PLAN MY SYSTEM
             </a>
-            <a href="#infrastructure" className="btn-ghost text-[11px] uppercase" style={{ fontFamily: "'DM Mono', monospace" }}>
+            <a href="#infrastructure" className="btn-secondary text-[11px] uppercase" style={{ fontFamily: "'DM Mono', monospace" }}>
               SEE THE ARCHITECTURE
             </a>
           </div>

@@ -47,7 +47,7 @@ export default function FinalCTA() {
             <a href="mailto:hello@narrative-ai.com" className="btn-primary" style={{ padding: "16px 36px", fontSize: "0.9375rem" }}>
               Plan My System
             </a>
-            <a href="#infrastructure" className="btn-ghost" style={{ padding: "16px 36px", fontSize: "0.9375rem" }}>
+            <a href="#infrastructure" className="btn-secondary" style={{ padding: "16px 36px", fontSize: "0.75rem" }}>
               Explore The Layers
             </a>
           </div>

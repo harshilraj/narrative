@@ -3,11 +3,20 @@ import { MutableRefObject, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
+let scrollY = 0;
+let targetScrollY = 0;
+let cameraTargetY = 0;
+let cameraCurrentY = 0;
+let currentScrollProgress = 0;
+
 type ScrollRef = MutableRefObject<number>;
 
-const STAR_COUNT = 800;
-const CLUSTER_COUNT = 5;
-const DUST_PER_CLUSTER = 120;
+const DISTANT_STAR_COUNT = 5000;
+const MID_STAR_COUNT = 2500;
+const NEAR_STAR_COUNT = 600;
+const HERO_STAR_COUNT = 40;
+const CLUSTER_COUNT = 6;
+const DUST_PER_CLUSTER = 800;
 const CONSTELLATION_COUNT = 45;
 const SHAPE_DURATION = 12;
 
@@ -25,9 +34,8 @@ const pointVertexShader = `
     vColor = color;
     float twinkle = 0.5 + 0.5 * sin(uTime * aTwinkle + aTwinkle * 4.7);
     vAlpha = aAlpha * mix(1.0, twinkle, uTwinkleStrength);
-
     vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-    gl_PointSize = aSize * uPixelRatio * (300.0 / -mvPosition.z);
+    gl_PointSize = aSize * uPixelRatio * (50.0 / max(1.0, -mvPosition.z));
     gl_Position = projectionMatrix * mvPosition;
   }
 `;
@@ -69,25 +77,39 @@ function createPointMaterial(twinkleStrength: number) {
   });
 }
 
-function StarField({ scrollRef }: { scrollRef: ScrollRef }) {
+type StarLayerConfig = {
+  count: number;
+  xRange: number;
+  zMin: number;
+  zMax: number;
+  sizeMin: number;
+  sizeMax: number;
+  alphaMin: number;
+  alphaMax: number;
+  scrollSpeed: number;
+  twinkle: number;
+  salt: number;
+};
+
+function ParticleLayer({ config, scrollRef }: { config: StarLayerConfig; scrollRef: ScrollRef }) {
   const pointsRef = useRef<THREE.Points>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
 
   const geometry = useMemo(() => {
-    const positions = new Float32Array(STAR_COUNT * 3);
-    const colors = new Float32Array(STAR_COUNT * 3);
-    const sizes = new Float32Array(STAR_COUNT);
-    const alphas = new Float32Array(STAR_COUNT);
-    const twinkles = new Float32Array(STAR_COUNT);
+    const positions = new Float32Array(config.count * 3);
+    const colors = new Float32Array(config.count * 3);
+    const sizes = new Float32Array(config.count);
+    const alphas = new Float32Array(config.count);
+    const twinkles = new Float32Array(config.count);
 
-    for (let i = 0; i < STAR_COUNT; i++) {
-      positions[i * 3] = (noise(i, 1) - 0.5) * 70;
-      positions[i * 3 + 1] = (noise(i, 2) - 0.5) * 50;
-      positions[i * 3 + 2] = -5 - noise(i, 3) * 10;
+    for (let i = 0; i < config.count; i++) {
+      positions[i * 3] = (noise(i, config.salt) - 0.5) * config.xRange * 2;
+      positions[i * 3 + 1] = (noise(i, config.salt + 1) - 0.5) * 300;
+      positions[i * 3 + 2] = config.zMin + noise(i, config.salt + 2) * (config.zMax - config.zMin);
       colors.set([1, 1, 1], i * 3);
-      sizes[i] = 0.012 + noise(i, 4) * 0.013;
-      alphas[i] = 0.3 + noise(i, 5) * 0.4;
-      twinkles[i] = 0.5 + noise(i, 6);
+      sizes[i] = config.sizeMin + noise(i, config.salt + 3) * (config.sizeMax - config.sizeMin);
+      alphas[i] = config.alphaMin + noise(i, config.salt + 4) * (config.alphaMax - config.alphaMin);
+      twinkles[i] = 0.5 + noise(i, config.salt + 5);
     }
 
     const bufferGeometry = new THREE.BufferGeometry();
@@ -97,18 +119,66 @@ function StarField({ scrollRef }: { scrollRef: ScrollRef }) {
     bufferGeometry.setAttribute("aAlpha", new THREE.BufferAttribute(alphas, 1));
     bufferGeometry.setAttribute("aTwinkle", new THREE.BufferAttribute(twinkles, 1));
     return bufferGeometry;
-  }, []);
+  }, [config]);
 
-  useFrame((state) => {
+  useFrame(() => {
     if (!pointsRef.current || !materialRef.current) return;
-    materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
+    const time = performance.now() * 0.001;
+    materialRef.current.uniforms.uTime.value = time;
     materialRef.current.uniforms.uPixelRatio.value = Math.min(window.devicePixelRatio, 1.5);
-    pointsRef.current.position.y = scrollRef.current * 0.00008;
+    pointsRef.current.position.y = scrollRef.current * config.scrollSpeed;
   });
 
   return (
     <points ref={pointsRef} geometry={geometry}>
-      <primitive object={createPointMaterial(0.45)} ref={materialRef} attach="material" />
+      <primitive object={createPointMaterial(config.twinkle)} ref={materialRef} attach="material" />
+    </points>
+  );
+}
+
+function HeroStars({ scrollRef }: { scrollRef: ScrollRef }) {
+  const pointsRef = useRef<THREE.Points>(null);
+  const materialRef = useRef<THREE.ShaderMaterial>(null);
+  const palette = useMemo(() => ["#ffffff", "#ffe4b5", "#b8d4ff", "#00FFB2"].map((color) => new THREE.Color(color)), []);
+
+  const geometry = useMemo(() => {
+    const positions = new Float32Array(HERO_STAR_COUNT * 3);
+    const colors = new Float32Array(HERO_STAR_COUNT * 3);
+    const sizes = new Float32Array(HERO_STAR_COUNT);
+    const alphas = new Float32Array(HERO_STAR_COUNT);
+    const twinkles = new Float32Array(HERO_STAR_COUNT);
+
+    for (let i = 0; i < HERO_STAR_COUNT; i++) {
+      positions[i * 3] = (noise(i, 120) - 0.5) * 80;
+      positions[i * 3 + 1] = (noise(i, 121) - 0.5) * 300;
+      positions[i * 3 + 2] = -2 + noise(i, 122) * 4;
+      const color = palette[i % palette.length];
+      colors.set([color.r, color.g, color.b], i * 3);
+      sizes[i] = 4 + noise(i, 123) * 5;
+      alphas[i] = 0.9 + noise(i, 124) * 0.1;
+      twinkles[i] = 2 + noise(i, 125);
+    }
+
+    const bufferGeometry = new THREE.BufferGeometry();
+    bufferGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    bufferGeometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    bufferGeometry.setAttribute("aSize", new THREE.BufferAttribute(sizes, 1));
+    bufferGeometry.setAttribute("aAlpha", new THREE.BufferAttribute(alphas, 1));
+    bufferGeometry.setAttribute("aTwinkle", new THREE.BufferAttribute(twinkles, 1));
+    return bufferGeometry;
+  }, [palette]);
+
+  useFrame(() => {
+    if (!pointsRef.current || !materialRef.current) return;
+    const time = performance.now() * 0.001;
+    materialRef.current.uniforms.uTime.value = time;
+    materialRef.current.uniforms.uPixelRatio.value = Math.min(window.devicePixelRatio, 1.5);
+    pointsRef.current.position.y = scrollRef.current * 0.00035;
+  });
+
+  return (
+    <points ref={pointsRef} geometry={geometry}>
+      <primitive object={createPointMaterial(0.9)} ref={materialRef} attach="material" />
     </points>
   );
 }
@@ -133,30 +203,23 @@ function NebulaDust({ scrollRef }: { scrollRef: ScrollRef }) {
 
     for (let cluster = 0; cluster < CLUSTER_COUNT; cluster++) {
       const center = new THREE.Vector3(
-        (noise(cluster, 20) - 0.5) * 46,
-        (noise(cluster, 21) - 0.5) * 30,
-        -7 - noise(cluster, 22) * 8
+        (noise(cluster, 20) - 0.5) * 60,
+        (noise(cluster, 21) - 0.5) * 260,
+        -9 - noise(cluster, 22) * 8
       );
-      meta.push({
-        center,
-        speed: 0.0001 + noise(cluster, 23) * 0.0002,
-      });
+      meta.push({ center, speed: 0.0001 + noise(cluster, 23) * 0.0002 });
 
       const color = nebulaColors[cluster % nebulaColors.length];
       for (let i = 0; i < DUST_PER_CLUSTER; i++) {
         const index = cluster * DUST_PER_CLUSTER + i;
-        const x = gaussian(index, 30) * 3;
-        const y = gaussian(index, 31) * 3;
-        const z = gaussian(index, 32) * 1.6;
-        const px = center.x + x;
-        const py = center.y + y;
-        const pz = center.z + z;
-
+        const px = center.x + gaussian(index, 30) * 3;
+        const py = center.y + gaussian(index, 31) * 3;
+        const pz = center.z + gaussian(index, 32) * 1.6;
         base.set([px, py, pz], index * 3);
         positions.set([px, py, pz], index * 3);
         colors.set([color.r, color.g, color.b], index * 3);
-        sizes[index] = 0.04 + noise(index, 33) * 0.06;
-        alphas[index] = 0.08 + noise(index, 34) * 0.1;
+        sizes[index] = 0.8 + noise(index, 33) * 1.6;
+        alphas[index] = 0.08 + noise(index, 34) * 0.08;
         twinkles[index] = 0.25 + noise(index, 35) * 0.35;
       }
     }
@@ -170,14 +233,15 @@ function NebulaDust({ scrollRef }: { scrollRef: ScrollRef }) {
     return { geometry: bufferGeometry, basePositions: base, clusterMeta: meta };
   }, [nebulaColors]);
 
-  useFrame((state) => {
+  useFrame(() => {
     if (!pointsRef.current || !materialRef.current) return;
     const positions = geometry.getAttribute("position") as THREE.BufferAttribute;
     const arr = positions.array as Float32Array;
+    const time = performance.now() * 0.001;
 
     for (let cluster = 0; cluster < CLUSTER_COUNT; cluster++) {
       const meta = clusterMeta[cluster];
-      const angle = state.clock.elapsedTime * 60 * meta.speed;
+      const angle = time * 60 * meta.speed;
       const cos = Math.cos(angle);
       const sin = Math.sin(angle);
 
@@ -192,7 +256,7 @@ function NebulaDust({ scrollRef }: { scrollRef: ScrollRef }) {
     }
 
     positions.needsUpdate = true;
-    materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
+    materialRef.current.uniforms.uTime.value = time;
     materialRef.current.uniforms.uPixelRatio.value = Math.min(window.devicePixelRatio, 1.5);
     pointsRef.current.position.y = scrollRef.current * 0.00018;
   });
@@ -209,21 +273,13 @@ function makeShapes() {
     const level = Math.floor(Math.log2(i + 1));
     const indexInLevel = i - (2 ** level - 1);
     const nodesInLevel = Math.max(1, 2 ** level);
-    return new THREE.Vector3(
-      ((indexInLevel + 0.5) / nodesInLevel - 0.5) * Math.min(16, nodesInLevel * 2.2),
-      6 - level * 2.1,
-      (noise(i, 70) - 0.5) * 2.4
-    );
+    return new THREE.Vector3(((indexInLevel + 0.5) / nodesInLevel - 0.5) * Math.min(16, nodesInLevel * 2.2), 6 - level * 2.1, (noise(i, 70) - 0.5) * 2.4);
   });
 
   const flow = Array.from({ length: CONSTELLATION_COUNT }, (_, i) => {
     const column = i % 9;
     const row = Math.floor(i / 9);
-    return new THREE.Vector3(
-      -8 + column * 2,
-      Math.sin(column * 0.85) * 1.6 + (row - 2) * 1.25,
-      (noise(i, 71) - 0.5) * 2
-    );
+    return new THREE.Vector3(-8 + column * 2, Math.sin(column * 0.85) * 1.6 + (row - 2) * 1.25, (noise(i, 71) - 0.5) * 2);
   });
 
   const hub = Array.from({ length: CONSTELLATION_COUNT }, (_, i) => {
@@ -260,56 +316,45 @@ function ConstellationLayer({ scrollRef }: { scrollRef: ScrollRef }) {
   const groupRef = useRef<THREE.Group>(null);
   const nodeRefs = useRef<Array<THREE.Mesh | null>>([]);
   const lineRef = useRef<THREE.LineSegments>(null);
-  const positionsRef = useRef<THREE.Vector3[]>([]);
-  const velocitiesRef = useRef<THREE.Vector3[]>([]);
+  const positionsRef = useRef<THREE.Vector3[]>(
+    Array.from({ length: CONSTELLATION_COUNT }, (_, i) => new THREE.Vector3((noise(i, 80) - 0.5) * 28, (noise(i, 81) - 0.5) * 260, -2 + (noise(i, 82) - 0.5) * 6))
+  );
+  const velocitiesRef = useRef<THREE.Vector3[]>(
+    Array.from({ length: CONSTELLATION_COUNT }, (_, i) => new THREE.Vector3((noise(i, 83) - 0.5) * 0.016, (noise(i, 84) - 0.5) * 0.016, (noise(i, 85) - 0.5) * 0.012))
+  );
   const currentShapeRef = useRef(-1);
-  const scatterTargetsRef = useRef<THREE.Vector3[]>([]);
+  const scatterTargetsRef = useRef<THREE.Vector3[]>(positionsRef.current.map((pos) => pos.clone()));
   const shapes = useMemo(makeShapes, []);
   const colors = useMemo(() => [new THREE.Color("#00FFB2"), new THREE.Color("#4488ff"), new THREE.Color("#ffffff")], []);
   const nodeGeometry = useMemo(() => new THREE.IcosahedronGeometry(0.04, 1), []);
 
   const lineGeometry = useMemo(() => {
-    const maxEdges = 64;
     const bufferGeometry = new THREE.BufferGeometry();
-    bufferGeometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(maxEdges * 2 * 3), 3));
+    bufferGeometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(64 * 2 * 3), 3));
     return bufferGeometry;
   }, []);
 
-  useMemo(() => {
-    positionsRef.current = Array.from({ length: CONSTELLATION_COUNT }, (_, i) => {
-      const pos = new THREE.Vector3((noise(i, 80) - 0.5) * 28, (noise(i, 81) - 0.5) * 18, -2 + (noise(i, 82) - 0.5) * 6);
-      return pos;
-    });
-    velocitiesRef.current = Array.from(
-      { length: CONSTELLATION_COUNT },
-      (_, i) => new THREE.Vector3((noise(i, 83) - 0.5) * 0.016, (noise(i, 84) - 0.5) * 0.016, (noise(i, 85) - 0.5) * 0.012)
-    );
-    scatterTargetsRef.current = positionsRef.current.map((pos) => pos.clone());
-  }, []);
-
-  useFrame((state) => {
+  useFrame(() => {
     if (!groupRef.current || !lineRef.current) return;
-    const time = state.clock.elapsedTime;
+    const time = performance.now() * 0.001;
     const loop = time % SHAPE_DURATION;
     const shapeIndex = Math.floor(time / SHAPE_DURATION) % shapes.length;
 
     if (shapeIndex !== currentShapeRef.current) {
       currentShapeRef.current = shapeIndex;
-      scatterTargetsRef.current = Array.from(
-        { length: CONSTELLATION_COUNT },
-        (_, i) => new THREE.Vector3((noise(i, 90 + shapeIndex) - 0.5) * 30, (noise(i, 94 + shapeIndex) - 0.5) * 18, -2 + (noise(i, 98 + shapeIndex) - 0.5) * 6)
-      );
+      scatterTargetsRef.current = Array.from({ length: CONSTELLATION_COUNT }, (_, i) => new THREE.Vector3((noise(i, 90 + shapeIndex) - 0.5) * 30, (noise(i, 94 + shapeIndex) - 0.5) * 260, -2 + (noise(i, 98 + shapeIndex) - 0.5) * 6));
     }
 
     positionsRef.current.forEach((position, index) => {
       const mesh = nodeRefs.current[index];
       if (!mesh) return;
+      const target = shapes[shapeIndex][index].clone().setY(shapes[shapeIndex][index].y + cameraCurrentY);
 
       if (loop < 4) {
         position.lerp(scatterTargetsRef.current[index], 0.01);
         position.add(velocitiesRef.current[index]);
       } else if (loop < 8) {
-        position.lerp(shapes[shapeIndex][index], 0.012);
+        position.lerp(target, 0.012);
       } else {
         position.addScaledVector(velocitiesRef.current[index], 0.4);
         position.lerp(scatterTargetsRef.current[index], 0.004);
@@ -318,7 +363,7 @@ function ConstellationLayer({ scrollRef }: { scrollRef: ScrollRef }) {
       mesh.position.copy(position);
       const material = mesh.material as THREE.MeshStandardMaterial;
       const twinkle = 0.5 + Math.sin(time * 0.8 + index) * 0.5;
-      material.opacity = 0.4 + twinkle * 0.4;
+      material.opacity = 0.45 + twinkle * 0.35;
       material.emissiveIntensity = 0.25 + twinkle * 0.35;
     });
 
@@ -326,7 +371,6 @@ function ConstellationLayer({ scrollRef }: { scrollRef: ScrollRef }) {
     const positionAttr = lineGeometry.getAttribute("position") as THREE.BufferAttribute;
     const arr = positionAttr.array as Float32Array;
     arr.fill(0);
-
     let lineOpacity = 0;
     if (loop >= 4 && loop < 8) lineOpacity = Math.min(0.25, ((loop - 4) / 2) * 0.25);
     if (loop >= 8 && loop < 9) lineOpacity = Math.max(0, (1 - (loop - 8)) * 0.25);
@@ -334,8 +378,6 @@ function ConstellationLayer({ scrollRef }: { scrollRef: ScrollRef }) {
     edges.forEach(([a, b], index) => {
       const aPos = positionsRef.current[a];
       const bPos = positionsRef.current[b];
-      const close = aPos.distanceTo(shapes[shapeIndex][a]) < 0.5 && bPos.distanceTo(shapes[shapeIndex][b]) < 0.5;
-      if (!close && loop < 8) return;
       arr.set([aPos.x, aPos.y, aPos.z, bPos.x, bPos.y, bPos.z], index * 6);
     });
 
@@ -352,22 +394,8 @@ function ConstellationLayer({ scrollRef }: { scrollRef: ScrollRef }) {
       {Array.from({ length: CONSTELLATION_COUNT }, (_, index) => {
         const color = colors[index % 10 < 3 ? 0 : index % 10 < 7 ? 1 : 2];
         return (
-          <mesh
-            key={index}
-            ref={(mesh) => {
-              nodeRefs.current[index] = mesh;
-            }}
-            geometry={nodeGeometry}
-          >
-            <meshStandardMaterial
-              transparent
-              depthWrite={false}
-              color={color}
-              emissive={color}
-              emissiveIntensity={0.35}
-              opacity={0.55}
-              roughness={0.4}
-            />
+          <mesh key={index} ref={(mesh) => { nodeRefs.current[index] = mesh; }} geometry={nodeGeometry}>
+            <meshStandardMaterial transparent depthWrite={false} color={color} emissive={color} emissiveIntensity={0.35} opacity={0.55} roughness={0.4} />
           </mesh>
         );
       })}
@@ -375,15 +403,68 @@ function ConstellationLayer({ scrollRef }: { scrollRef: ScrollRef }) {
   );
 }
 
-function CameraDrift({ scrollRef }: { scrollRef: ScrollRef }) {
-  const { camera } = useThree();
+type ShootingStar = {
+  line: THREE.Line;
+  frames: number;
+  velocity: THREE.Vector3;
+};
+
+function ShootingStars() {
+  const groupRef = useRef<THREE.Group>(null);
+  const starsRef = useRef<ShootingStar[]>([]);
+  const nextSpawnRef = useRef(0);
 
   useFrame((state) => {
+    if (!groupRef.current) return;
     const time = state.clock.elapsedTime;
-    camera.position.x = Math.sin(time * 0.04) * 1.5;
-    camera.position.y = Math.cos(time * 0.03) * 0.8 + scrollRef.current * 0.0001;
-    camera.position.z = 24;
-    camera.lookAt(0, 0, 0);
+
+    if (time > nextSpawnRef.current && starsRef.current.length < 2) {
+      const x = (Math.random() - 0.5) * 80;
+      const y = (Math.random() - 0.5) * 280 + cameraCurrentY;
+      const z = -2 + Math.random() * 4;
+      const length = 3 + Math.random() * 3;
+      const geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x, y, z), new THREE.Vector3(x - length, y + length * 0.38, z)]);
+      const material = new THREE.LineBasicMaterial({ color: "#ffffff", transparent: true, opacity: 1, depthWrite: false });
+      const line = new THREE.Line(geometry, material);
+      groupRef.current.add(line);
+      starsRef.current.push({ line, frames: 0, velocity: new THREE.Vector3(0.8, -0.3, 0) });
+      nextSpawnRef.current = time + 4 + Math.random() * 3;
+    }
+
+    starsRef.current = starsRef.current.filter((star) => {
+      star.frames += 1;
+      star.line.position.add(star.velocity);
+      if (star.frames > 40) {
+        (star.line.material as THREE.LineBasicMaterial).opacity = Math.max(0, 1 - (star.frames - 40) / 20);
+      }
+      if (star.frames >= 60) {
+        groupRef.current?.remove(star.line);
+        star.line.geometry.dispose();
+        (star.line.material as THREE.LineBasicMaterial).dispose();
+        return false;
+      }
+      return true;
+    });
+  });
+
+  return <group ref={groupRef} />;
+}
+
+function CameraScrollRig({ scrollRef }: { scrollRef: ScrollRef }) {
+  const { camera } = useThree();
+
+  useFrame(() => {
+    const maxScroll = Math.max(1, document.body.scrollHeight - window.innerHeight);
+    targetScrollY = scrollY / maxScroll;
+    currentScrollProgress += (targetScrollY - currentScrollProgress) * 0.04;
+    cameraTargetY = -currentScrollProgress * 120;
+    camera.position.y += (cameraTargetY - camera.position.y) * 0.06;
+    cameraCurrentY = camera.position.y;
+    camera.position.x = Math.sin(currentScrollProgress * Math.PI * 3) * 6;
+    camera.position.z = 10 + Math.cos(currentScrollProgress * Math.PI * 2) * 3;
+    camera.rotation.z = currentScrollProgress * 0.15;
+    camera.lookAt(0, camera.position.y - 2, 0);
+    scrollRef.current = scrollY;
   });
 
   return null;
@@ -396,30 +477,47 @@ export default function GlobalEnvironment() {
   useEffect(() => {
     setMounted(true);
     const handleScroll = () => {
-      scrollRef.current = window.scrollY;
+      scrollY = window.scrollY;
+      const maxScroll = Math.max(1, document.body.scrollHeight - window.innerHeight);
+      const progress = scrollY / maxScroll;
+      targetScrollY = progress;
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const distantConfig = useMemo<StarLayerConfig>(() => ({
+    count: DISTANT_STAR_COUNT, xRange: 42, zMin: -18, zMax: -10, sizeMin: 0.6, sizeMax: 1.2, alphaMin: 0.55, alphaMax: 0.75, scrollSpeed: 0.00008, twinkle: 0.35, salt: 1,
+  }), []);
+  const midConfig = useMemo<StarLayerConfig>(() => ({
+    count: MID_STAR_COUNT, xRange: 44, zMin: -12, zMax: -5, sizeMin: 1.2, sizeMax: 2.2, alphaMin: 0.65, alphaMax: 0.85, scrollSpeed: 0.00018, twinkle: 0.45, salt: 40,
+  }), []);
+  const nearConfig = useMemo<StarLayerConfig>(() => ({
+    count: NEAR_STAR_COUNT, xRange: 40, zMin: -4, zMax: 2, sizeMin: 2.5, sizeMax: 5, alphaMin: 0.8, alphaMax: 1, scrollSpeed: 0.00035, twinkle: 0.6, salt: 80,
+  }), []);
+
   return (
     <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#02040a]">
       {mounted && (
-        <div className="absolute inset-0 opacity-[0.72]">
+        <div className="absolute inset-0 opacity-[0.72] pointer-events-none">
           <Canvas
-            camera={{ position: [0, 0, 24], fov: 50 }}
+            camera={{ position: [0, 0, 13], fov: 60 }}
             gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
             dpr={[1, 1.5]}
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", background: "#02040a" }}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", background: "#02040a", pointerEvents: "none" }}
           >
             <color attach="background" args={["#02040a"]} />
             <ambientLight intensity={0.6} />
             <pointLight position={[0, 0, 10]} intensity={1.1} color="#4488ff" />
-            <StarField scrollRef={scrollRef} />
+            <ParticleLayer config={distantConfig} scrollRef={scrollRef} />
+            <ParticleLayer config={midConfig} scrollRef={scrollRef} />
             <NebulaDust scrollRef={scrollRef} />
+            <ParticleLayer config={nearConfig} scrollRef={scrollRef} />
+            <HeroStars scrollRef={scrollRef} />
             <ConstellationLayer scrollRef={scrollRef} />
-            <CameraDrift scrollRef={scrollRef} />
+            <ShootingStars />
+            <CameraScrollRig scrollRef={scrollRef} />
           </Canvas>
         </div>
       )}
@@ -427,14 +525,13 @@ export default function GlobalEnvironment() {
       <div
         className="absolute inset-0 z-10 pointer-events-none"
         style={{
-          background: "radial-gradient(ellipse 75% 65% at 50% 50%, rgba(2,4,10,0.08) 0%, rgba(2,4,10,0.24) 48%, rgba(2,4,10,0.82) 100%)",
+          background: "radial-gradient(ellipse 75% 65% at 50% 50%, rgba(2,4,10,0.05) 0%, rgba(2,4,10,0.18) 48%, rgba(2,4,10,0.75) 100%)",
         }}
       />
-
       <div
         className="absolute inset-0 z-20 pointer-events-none"
         style={{
-          background: "radial-gradient(ellipse 44% 50% at 50% 50%, rgba(2,4,10,0.58) 0%, rgba(2,4,10,0.2) 52%, transparent 100%)",
+          background: "radial-gradient(ellipse 44% 50% at 50% 50%, rgba(2,4,10,0.5) 0%, rgba(2,4,10,0.18) 52%, transparent 100%)",
         }}
       />
     </div>
