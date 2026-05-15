@@ -62,13 +62,10 @@ export default function Hero() {
             </a>
           </div>
 
-          <div data-reveal className="mt-10 flex flex-col items-center gap-4">
-            <div className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/35">Cloud-native deployment across</div>
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              {["AWS", "Google Cloud", "Azure", "AI Orchestration", "Workflow Automation", "Production Systems"].map((item) => (
-                <span key={item} className="cloud-pill">{item}</span>
-              ))}
-            </div>
+          <div data-reveal className="mt-10 hero-infra-line">
+            <span>AWS-ready infrastructure</span>
+            <span>Google Cloud deployment</span>
+            <span>Azure-compatible systems</span>
           </div>
         </div>
 

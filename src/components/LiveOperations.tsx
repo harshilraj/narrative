@@ -4,38 +4,30 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
 
-const LAYERS = [
+const FLOW = [
   {
-    id: "01",
-    label: "DATA LAYER",
-    title: "Unified operational intake",
-    description: "Every workflow, API, event stream, and business signal enters one normalized orchestration layer before actions are triggered.",
-    tags: ["APIs", "Events", "Systems"],
-    metrics: ["AWS ready", "GCP ready", "Azure ready"],
+    label: "Signals",
+    title: "Operational intake",
+    copy: "Workflows, events, approvals, and cloud activity enter a single execution fabric.",
+    meta: ["APIs", "Events", "Systems"],
   },
   {
-    id: "02",
-    label: "MODEL LAYER",
-    title: "Context-aware reasoning",
-    description: "Models evaluate operational context, memory, policies, and business logic before decisions execute.",
-    tags: ["Policy", "Memory", "Review"],
-    metrics: ["Traceable", "Governed", "Observable"],
+    label: "Intelligence",
+    title: "Context reasoning",
+    copy: "Models evaluate policies, history, business logic, and risk before action is triggered.",
+    meta: ["Policy", "Memory", "Review"],
   },
   {
-    id: "03",
-    label: "ACTION LAYER",
-    title: "Automated execution systems",
-    description: "Actions route instantly across CRMs, internal systems, cloud services, and operational tools.",
-    tags: ["CRM", "Cloud", "Internal"],
-    metrics: ["Reversible", "Audited", "Controlled"],
+    label: "Execution",
+    title: "Automated action",
+    copy: "Approved decisions move across CRMs, internal systems, cloud services, and teams.",
+    meta: ["Routing", "Actions", "Rollback"],
   },
   {
-    id: "04",
-    label: "CLOUD LAYER",
-    title: "Secure cloud deployment",
-    description: "Systems are deployed into scalable cloud environments with observability, access control, and operational safeguards.",
-    tags: ["AWS", "GCP", "Azure"],
-    metrics: ["Kubernetes", "Serverless", "Secure infra"],
+    label: "Monitoring",
+    title: "Operational control",
+    copy: "Every action stays observable with audit trails, reliability signals, and human override.",
+    meta: ["Logs", "SLO", "Oversight"],
   },
 ];
 
@@ -45,7 +37,7 @@ export default function LiveOperations() {
   useEffect(() => {
     if (!sectionRef.current) return;
     gsap.fromTo(
-      sectionRef.current.querySelectorAll(".layer-reveal"),
+      sectionRef.current.querySelectorAll(".flow-reveal"),
       { opacity: 0, y: 24, filter: "blur(4px)" },
       {
         opacity: 1,
@@ -60,61 +52,46 @@ export default function LiveOperations() {
   }, []);
 
   return (
-    <section id="process" ref={sectionRef} className="section relative overflow-hidden">
+    <section id="process" ref={sectionRef} className="section operational-flow-section relative overflow-hidden">
       <div className="container relative z-10">
-        <div className="layer-reveal mb-12 max-w-3xl">
+        <div className="flow-reveal mb-12 max-w-3xl">
           <div className="section-eyebrow mb-4">HOW IT&apos;S BUILT</div>
-          <h2 className="section-title text-balance">Infrastructure designed for autonomous operations.</h2>
-          <p className="t-body mt-5">Production-grade AI systems built to integrate with existing workflows, cloud infrastructure, and operational pipelines.</p>
+          <h2 className="section-title text-balance">Operations flowing through intelligent infrastructure.</h2>
+          <p className="t-body mt-5">Narrative turns fragmented work into a connected execution loop: signals become context, context becomes action, and every action remains observable.</p>
         </div>
 
-        <div className="layer-reveal layer-stack">
-          {LAYERS.map((layer) => (
-            <article key={layer.id} className="layer-row">
-              <div className="layer-number">{layer.id}</div>
+        <div className="flow-reveal orchestration-flow">
+          <div className="flow-backplane" aria-hidden="true">
+            <div className="flow-line" />
+            <div className="flow-pulse-runner" />
+          </div>
 
-              <div className="relative z-10 flex flex-col gap-6">
-                <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <div className="font-mono text-[9px] uppercase tracking-[0.25em] text-[var(--accent)]">{layer.id} / {layer.label}</div>
-                    <h3 className="mt-2 font-serif text-[28px] leading-none text-white">{layer.title}</h3>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2">
-                    {layer.tags.map((tag) => (
-                      <span key={tag} className="tag-chip">{tag}</span>
-                    ))}
-                    <span className="active-badge">
-                      <span className="pulse-dot" />
-                      ACTIVE
-                    </span>
-                  </div>
-                </div>
-
-                <div className="layer-details">
-                  <p className="t-body max-w-2xl">{layer.description}</p>
-                  <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3">
-                    {layer.metrics.map((metric) => (
-                      <div key={metric} className="font-mono text-[11px] uppercase tracking-[0.12em] text-white/55">
-                        <span className="text-[var(--accent-bright)]">{metric.split(" ")[0]}</span>{" "}
-                        {metric.split(" ").slice(1).join(" ")}
-                      </div>
-                    ))}
-                  </div>
+          {FLOW.map((stage, index) => (
+            <article key={stage.label} className="flow-stage">
+              <div className="flow-node">
+                <span>{String(index + 1).padStart(2, "0")}</span>
+              </div>
+              <div className="flow-stage-content">
+                <div className="font-mono text-[9px] uppercase tracking-[0.24em] text-[var(--accent)]">{stage.label}</div>
+                <h3 className="mt-3 font-serif text-[30px] leading-none text-white">{stage.title}</h3>
+                <p className="t-body mt-4">{stage.copy}</p>
+                <div className="mt-6 flex flex-wrap gap-2">
+                  {stage.meta.map((item) => (
+                    <span key={item} className="tag-chip">{item}</span>
+                  ))}
                 </div>
               </div>
             </article>
           ))}
         </div>
 
-        <div className="layer-reveal mt-8 cloud-strip">
-          <span>Cloud-native deployment</span>
+        <div className="flow-reveal infra-ribbon mt-10">
+          <span>Cloud-native execution</span>
           <strong>AWS</strong>
           <strong>Google Cloud</strong>
           <strong>Azure</strong>
-          <strong>Kubernetes</strong>
-          <strong>Serverless</strong>
-          <strong>Secure Infrastructure</strong>
+          <strong>Secure deployment</strong>
+          <strong>Human oversight</strong>
         </div>
       </div>
     </section>
