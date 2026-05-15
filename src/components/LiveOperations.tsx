@@ -8,34 +8,34 @@ const LAYERS = [
   {
     id: "01",
     label: "DATA LAYER",
-    title: "Unified signal intake",
-    description: "Every operational input lands in one normalized stream before models or humans act.",
-    tags: ["Streams", "Webhooks", "Sync"],
-    metrics: ["2.4M events/day", "42 sources", "99.9% intake"],
+    title: "Unified operational intake",
+    description: "Every workflow, API, event stream, and business signal enters one normalized orchestration layer before actions are triggered.",
+    tags: ["APIs", "Events", "Systems"],
+    metrics: ["AWS ready", "GCP ready", "Azure ready"],
   },
   {
     id: "02",
     label: "MODEL LAYER",
-    title: "Reasoning with context",
-    description: "Routing logic selects the right model, memory, and policy for every decision path.",
-    tags: ["Router", "Memory", "Policy"],
-    metrics: ["340ms avg", "18 models", "0 drift"],
+    title: "Context-aware reasoning",
+    description: "Models evaluate operational context, memory, policies, and business logic before decisions execute.",
+    tags: ["Policy", "Memory", "Review"],
+    metrics: ["Traceable", "Governed", "Observable"],
   },
   {
     id: "03",
     label: "ACTION LAYER",
-    title: "Automated execution",
-    description: "Approved decisions trigger workflows, integrations, audits, and rollback guards.",
-    tags: ["Triggers", "Bus", "Audit"],
-    metrics: ["99.97% uptime", "128 flows", "24/7 logs"],
+    title: "Automated execution systems",
+    description: "Actions route instantly across CRMs, internal systems, cloud services, and operational tools.",
+    tags: ["CRM", "Cloud", "Internal"],
+    metrics: ["Reversible", "Audited", "Controlled"],
   },
   {
     id: "04",
-    label: "CONTROL LAYER",
-    title: "Production observability",
-    description: "Teams see every decision, exception, latency spike, and handoff before risk compounds.",
-    tags: ["Logs", "Alerts", "SLO"],
-    metrics: ["47 services", "3 regions", "1 control view"],
+    label: "CLOUD LAYER",
+    title: "Secure cloud deployment",
+    description: "Systems are deployed into scalable cloud environments with observability, access control, and operational safeguards.",
+    tags: ["AWS", "GCP", "Azure"],
+    metrics: ["Kubernetes", "Serverless", "Secure infra"],
   },
 ];
 
@@ -64,8 +64,8 @@ export default function LiveOperations() {
       <div className="container relative z-10">
         <div className="layer-reveal mb-12 max-w-3xl">
           <div className="section-eyebrow mb-4">HOW IT&apos;S BUILT</div>
-          <h2 className="section-title text-balance">Every layer engineered for production.</h2>
-          <p className="t-body mt-5">Not demos. Not prototypes. Systems that run.</p>
+          <h2 className="section-title text-balance">Infrastructure designed for autonomous operations.</h2>
+          <p className="t-body mt-5">Production-grade AI systems built to integrate with existing workflows, cloud infrastructure, and operational pipelines.</p>
         </div>
 
         <div className="layer-reveal layer-stack">
@@ -105,6 +105,16 @@ export default function LiveOperations() {
               </div>
             </article>
           ))}
+        </div>
+
+        <div className="layer-reveal mt-8 cloud-strip">
+          <span>Cloud-native deployment</span>
+          <strong>AWS</strong>
+          <strong>Google Cloud</strong>
+          <strong>Azure</strong>
+          <strong>Kubernetes</strong>
+          <strong>Serverless</strong>
+          <strong>Secure Infrastructure</strong>
         </div>
       </div>
     </section>

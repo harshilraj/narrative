@@ -8,26 +8,26 @@ const PANELS = [
   {
     label: "01 / SIGNAL LAYER",
     status: "INGESTING",
-    title: "Data Ingestion",
-    items: ["Event Streams", "API Webhooks", "Database Sync", "File Pipelines"],
-    stat: "2.4M",
-    statLabel: "events / day",
+    title: "Operational Signals",
+    items: ["Business Activity", "Workflow Events", "Cloud Systems", "Approval Queues"],
+    stat: "UNIFIED",
+    statLabel: "intake across systems",
   },
   {
     label: "02 / INTELLIGENCE LAYER",
     status: "REASONING",
-    title: "AI Orchestration",
-    items: ["Model Router", "Context Engine", "Decision Graph", "Memory Store"],
-    stat: "340ms",
-    statLabel: "avg decision time",
+    title: "Decision Intelligence",
+    items: ["Context Routing", "Policy Logic", "Human Review", "Model Selection"],
+    stat: "GOVERNED",
+    statLabel: "reasoning before action",
   },
   {
     label: "03 / EXECUTION LAYER",
     status: "EXECUTING",
-    title: "Action Engine",
-    items: ["Workflow Triggers", "Integration Bus", "Audit Logger", "Rollback Guard"],
-    stat: "99.97%",
-    statLabel: "uptime",
+    title: "Autonomous Execution",
+    items: ["Workflow Dispatch", "System Updates", "Audit Trails", "Rollback Guards"],
+    stat: "DEPLOYED",
+    statLabel: "inside production operations",
   },
 ];
 
@@ -67,9 +67,10 @@ export default function Capabilities() {
         <div className="architecture-reveal">
           <div className="section-eyebrow mb-4">SYSTEM ARCHITECTURE</div>
           <h2 className="section-title">
-            One operating layer.<br />
-            <span className="text-[var(--accent-bright)]">For AI execution.</span>
+            One orchestration layer<br />
+            <span className="text-[var(--accent-bright)]">for business operations.</span>
           </h2>
+          <p className="t-body mt-4">Connect signals, reasoning, and execution into one AI-native operational system.</p>
           <div className="my-5 h-px w-full bg-white/10" />
         </div>
 
@@ -103,7 +104,7 @@ export default function Capabilities() {
             </Fragment>
           ))}
           <div className="architecture-bottom-bar">
-            Every signal processed. Every decision logged. Every action reversible.
+            Built for production environments: secure routing, cloud-native deployment, audit visibility, rollback protection, and enterprise-scale orchestration.
           </div>
         </div>
       </div>

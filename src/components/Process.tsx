@@ -1,60 +1,56 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
 
-const STEPS = [
+const STACK = [
   {
-    num: "01",
-    week: "WK 1",
-    phase: "DISCOVERY",
-    title: "System Audit",
-    points: ["Map existing data flows", "Identify automation gaps"],
+    id: "01",
+    label: "SYSTEMS AUDIT",
+    title: "Operational reality map",
+    copy: "Map workflows, repetitive operations, bottlenecks, cloud infrastructure, and data movement.",
   },
   {
-    num: "02",
-    week: "WK 2",
-    phase: "ARCHITECTURE",
-    title: "Blueprint",
-    points: ["Design AI layer structure", "Select models + connectors"],
+    id: "02",
+    label: "ORCHESTRATION BLUEPRINT",
+    title: "Execution architecture",
+    copy: "Design the AI execution layer, routing logic, integrations, and automation architecture.",
   },
   {
-    num: "03",
-    week: "WK 3-4",
-    phase: "BUILD",
-    title: "Integration",
-    points: ["Connect pipelines live", "Wire decision routing"],
+    id: "03",
+    label: "AI + CLOUD INTEGRATION",
+    title: "Production connection",
+    copy: "Connect models, APIs, CRMs, internal systems, and cloud services into one operational layer.",
   },
   {
-    num: "04",
-    week: "WK 5",
-    phase: "VALIDATION",
-    title: "Testing",
-    points: ["Load + edge case testing", "Performance tuning"],
+    id: "04",
+    label: "AUTONOMOUS EXECUTION",
+    title: "Live operational action",
+    copy: "Deploy AI workflows that trigger, route, decide, and execute automatically.",
   },
   {
-    num: "05",
-    week: "WK 6",
-    phase: "LAUNCH",
-    title: "Production",
-    points: ["Monitoring activated", "Full handoff complete"],
+    id: "05",
+    label: "MONITORING + OPTIMIZATION",
+    title: "Continuous reliability",
+    copy: "Track performance, reliability, latency, audit logs, and operational efficiency continuously.",
   },
 ];
 
+const TRUST = [
+  "Up to 90% repetitive work reduction",
+  "Enterprise-ready deployment",
+  "Cloud-native architecture",
+  "Human-in-the-loop safeguards",
+];
+
 export default function Process() {
-  const [entered, setEntered] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (!sectionRef.current) return;
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) setEntered(true);
-    }, { threshold: 0.35 });
-    observer.observe(sectionRef.current);
-
     gsap.fromTo(
-      sectionRef.current.querySelectorAll(".deployment-reveal"),
+      sectionRef.current.querySelectorAll(".transformation-reveal"),
       { opacity: 0, y: 24, filter: "blur(4px)" },
       {
         opacity: 1,
@@ -66,38 +62,33 @@ export default function Process() {
         scrollTrigger: { trigger: sectionRef.current, start: "top 68%" },
       }
     );
-
-    return () => observer.disconnect();
   }, []);
 
   return (
-    <section id="results" ref={sectionRef} className="section deployment-shell">
+    <section id="results" ref={sectionRef} className="section relative overflow-hidden">
       <div className="container relative z-10">
-        <div className="deployment-reveal max-w-3xl">
+        <div className="transformation-reveal max-w-3xl">
           <div className="section-eyebrow mb-4">DEPLOYMENT SEQUENCE</div>
-          <h2 className="section-title">Audit to production.</h2>
-          <p className="t-body mt-4">Six weeks. No surprises.</p>
+          <h2 className="section-title text-balance">From operational chaos to autonomous execution.</h2>
+          <p className="t-body mt-5">We design, integrate, and deploy AI systems directly into real business operations - without disrupting existing workflows.</p>
         </div>
 
-        <div className={`deployment-reveal deployment-rail ${entered ? "is-entered" : ""}`}>
-          <div className="deployment-fill" />
-          {STEPS.map((step) => (
-            <article key={step.num} className="deployment-step">
-              <div className="deployment-node">{step.num}</div>
-              <div className="deployment-connector" />
-              <div className="deployment-card">
-                <div className="font-mono text-[8px] uppercase tracking-[0.2em] text-[var(--accent)]">{step.week}</div>
-                <div className="mt-1 font-mono text-[9px] uppercase tracking-[0.14em] text-white/40">{step.phase}</div>
-                <h3 className="mt-2 font-serif text-[18px] leading-none text-white">{step.title}</h3>
-                <ul className="mt-5 flex flex-col gap-3">
-                  {step.points.map((point) => (
-                    <li key={point} className="font-mono text-[10px] leading-relaxed text-white/55">
-                      <span className="text-[var(--accent)]">-</span> {point}
-                    </li>
-                  ))}
-                </ul>
+        <div className="transformation-reveal transformation-stack mt-12">
+          {STACK.map((step) => (
+            <article key={step.id} className="transformation-row">
+              <div className="transformation-index">{step.id}</div>
+              <div>
+                <div className="font-mono text-[9px] uppercase tracking-[0.22em] text-[var(--accent)]">{step.label}</div>
+                <h3 className="mt-2 font-serif text-[26px] leading-none text-white">{step.title}</h3>
               </div>
+              <p className="t-body max-w-xl">{step.copy}</p>
             </article>
+          ))}
+        </div>
+
+        <div className="transformation-reveal metrics-bar mt-8">
+          {TRUST.map((item) => (
+            <div key={item} className="metrics-item">{item}</div>
           ))}
         </div>
       </div>

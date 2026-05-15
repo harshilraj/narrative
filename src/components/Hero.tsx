@@ -44,13 +44,13 @@ export default function Hero() {
           </div>
 
           <h1 data-reveal className="t-h1 text-balance" style={{ fontSize: "clamp(2.5rem, 6vw, 5.5rem)", lineHeight: 1.02, letterSpacing: 0, textShadow: "0 20px 80px rgba(0,0,0,0.6)" }}>
-            AI systems built<br />
-            for how work<br />
-            actually runs.
+            Build the operating<br />
+            layer your business<br />
+            actually needs.
           </h1>
           
           <p data-reveal className="mt-8 text-white/62 font-light text-[1rem] md:text-[1.15rem] max-w-2xl mx-auto" style={{ lineHeight: 1.6 }}>
-            Narrative AI connects your data, tools, and models into one orchestration layer so decisions happen automatically, and nothing falls through.
+            Narrative AI connects workflows, cloud systems, data, and models into one intelligent execution layer - reducing repetitive operations, accelerating decisions, and automating work at scale.
           </p>
 
           <div data-reveal className="mt-10 md:mt-12 flex flex-col sm:flex-row items-center gap-4">
@@ -58,8 +58,17 @@ export default function Hero() {
               BUILD MY SYSTEM
             </a>
             <a href="#infrastructure" className="btn-secondary text-[11px] uppercase" style={{ fontFamily: "'DM Mono', monospace" }}>
-              SEE HOW IT WORKS
+              EXPLORE ARCHITECTURE
             </a>
+          </div>
+
+          <div data-reveal className="mt-10 flex flex-col items-center gap-4">
+            <div className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/35">Cloud-native deployment across</div>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              {["AWS", "Google Cloud", "Azure", "AI Orchestration", "Workflow Automation", "Production Systems"].map((item) => (
+                <span key={item} className="cloud-pill">{item}</span>
+              ))}
+            </div>
           </div>
         </div>
 

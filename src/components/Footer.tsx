@@ -8,9 +8,9 @@ export default function Footer() {
   }, []);
 
   const links: Record<string, string[]> = {
-    Systems: ["Workflow Routing", "Automation", "Cloud Architecture", "Monitoring"],
-    Company: ["About", "Case Studies", "Blog", "Careers"],
-    Legal: ["Privacy Policy", "Terms of Service", "SOC 2"],
+    Infrastructure: ["Cloud Infrastructure", "AI Orchestration", "Workflow Systems", "Enterprise Automation"],
+    Systems: ["Operational Intelligence", "Execution Layer", "Audit Visibility", "Human Oversight"],
+    Cloud: ["AWS", "Google Cloud", "Azure", "Secure Deployment"],
   };
 
   return (
@@ -23,7 +23,7 @@ export default function Footer() {
           <div className="lg:col-span-4">
             <div className="t-h3 mb-5 font-serif tracking-wide" style={{ fontSize: "1.2rem" }}>Narrative AI</div>
             <p className="t-body mb-8 opacity-60" style={{ lineHeight: 1.7, maxWidth: "280px", fontSize: "0.95rem" }}>
-              Production AI systems for teams that need clear routing, accountable automation, and reliable deployment.
+              AI-native operational systems for businesses that need reliable execution, intelligent automation, and production-grade infrastructure.
             </p>
             <div className="flex items-center gap-3">
               <div className="pulse-dot" />

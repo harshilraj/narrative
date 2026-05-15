@@ -6,6 +6,8 @@ import Capabilities from "@/components/Capabilities";
 import LiveOperations from "@/components/LiveOperations";
 import Process from "@/components/Process";
 import CaseStudies from "@/components/CaseStudies";
+import EnterpriseTrust from "@/components/EnterpriseTrust";
+import Industries from "@/components/Industries";
 import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
 import SmoothScroll from "@/components/SmoothScroll";
@@ -25,6 +27,8 @@ export default function Home() {
         <Capabilities />
         <LiveOperations />
         <Process />
+        <EnterpriseTrust />
+        <Industries />
         <CaseStudies />
         <FinalCTA />
         <Footer />

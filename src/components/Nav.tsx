@@ -35,6 +35,8 @@ export default function Nav() {
           {[
             { label: "HOW IT WORKS", href: "#process" },
             { label: "DEPLOYMENT", href: "#results" },
+            { label: "ENTERPRISE", href: "#enterprise" },
+            { label: "CASE STUDIES", href: "#case-studies" },
           ].map((link, index) => (
             <a key={`${link.label}-${index}`}
               href={link.href}

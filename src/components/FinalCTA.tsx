@@ -33,35 +33,30 @@ export default function FinalCTA() {
       <div className="container relative z-10">
         <div className="glass-card max-w-3xl mx-auto flex flex-col items-center text-center cta-content">
 
-          <div className="section-eyebrow mb-5">Start With The Operating Map</div>
+          <div className="section-eyebrow mb-5">START WITH THE OPERATING MAP</div>
 
           <h2 className="t-h2 text-balance mb-6 font-serif" style={{ fontSize: "clamp(2.25rem, 5vw, 3.7rem)", lineHeight: 1.1 }}>
-            Build the system your operations already need.
+            The companies adopting AI infrastructure now will define operational speed for the next decade.
           </h2>
 
           <p className="t-body text-center opacity-80" style={{ maxWidth: "500px", margin: "0 auto 2.25rem", fontSize: "1.05rem" }}>
-            We connect the signals, decisions, and actions that keep daily work moving.
+            Narrative AI helps businesses automate execution, reduce operational overhead, and deploy AI systems that scale with real-world complexity.
           </p>
 
           <div className="flex flex-wrap gap-4 justify-center mb-10 md:mb-12">
             <a href="mailto:hello@narrative-ai.com" className="btn-primary" style={{ padding: "16px 36px", fontSize: "0.9375rem" }}>
-              Build My System
+              Start System Audit
             </a>
             <a href="#infrastructure" className="btn-secondary" style={{ padding: "16px 36px", fontSize: "0.75rem" }}>
-              Explore The Layers
+              Explore Architecture
             </a>
           </div>
 
           {/* Final trust bar */}
-          <div className="flex flex-wrap items-center justify-center gap-6 opacity-50">
-            <div className="flex items-center gap-2">
-              <div className="pulse-dot" />
-              <span className="t-mono uppercase tracking-widest" style={{ fontSize: "11px" }}>128 workflows mapped</span>
-            </div>
-            <div className="w-px h-3 bg-white opacity-20" />
-            <span className="t-mono uppercase tracking-widest" style={{ fontSize: "11px" }}>SOC 2 Type II</span>
-            <div className="w-px h-3 bg-white opacity-20" />
-            <span className="t-mono uppercase tracking-widest" style={{ fontSize: "11px" }}>AWS / GCP / Azure</span>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            {["Enterprise-ready deployment", "AWS", "Google Cloud", "Azure", "SOC 2-ready infrastructure"].map((item) => (
+              <span key={item} className="cloud-pill">{item}</span>
+            ))}
           </div>
 
         </div>
