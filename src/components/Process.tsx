@@ -4,44 +4,37 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
 
-const STACK = [
+const PHASES = [
   {
     id: "01",
-    label: "SYSTEMS AUDIT",
-    title: "Operational reality map",
-    copy: "Map workflows, repetitive operations, bottlenecks, cloud infrastructure, and data movement.",
+    label: "Operational Mapping",
+    state: "DISCOVER",
+    copy: "Analyze workflows, bottlenecks, approvals, systems, and cloud infrastructure.",
   },
   {
     id: "02",
-    label: "ORCHESTRATION BLUEPRINT",
-    title: "Execution architecture",
-    copy: "Design the AI execution layer, routing logic, integrations, and automation architecture.",
+    label: "Intelligence Architecture",
+    state: "DESIGN",
+    copy: "Design orchestration logic, AI routing, memory systems, and execution layers.",
   },
   {
     id: "03",
-    label: "AI + CLOUD INTEGRATION",
-    title: "Production connection",
-    copy: "Connect models, APIs, CRMs, internal systems, and cloud services into one operational layer.",
+    label: "Systems Integration",
+    state: "CONNECT",
+    copy: "Connect APIs, CRMs, cloud environments, data pipelines, and operational tooling.",
   },
   {
     id: "04",
-    label: "AUTONOMOUS EXECUTION",
-    title: "Live operational action",
-    copy: "Deploy AI workflows that trigger, route, decide, and execute automatically.",
+    label: "Autonomous Execution",
+    state: "EXECUTE",
+    copy: "Deploy AI-powered workflows capable of routing, triggering, and executing decisions automatically.",
   },
   {
     id: "05",
-    label: "MONITORING + OPTIMIZATION",
-    title: "Continuous reliability",
-    copy: "Track performance, reliability, latency, audit logs, and operational efficiency continuously.",
+    label: "Monitoring + Optimization",
+    state: "OBSERVE",
+    copy: "Track reliability, audit visibility, latency, system health, and operational efficiency continuously.",
   },
-];
-
-const TRUST = [
-  "Up to 90% repetitive work reduction",
-  "Enterprise-ready deployment",
-  "Cloud-native architecture",
-  "Human-in-the-loop safeguards",
 ];
 
 export default function Process() {
@@ -50,7 +43,7 @@ export default function Process() {
   useEffect(() => {
     if (!sectionRef.current) return;
     gsap.fromTo(
-      sectionRef.current.querySelectorAll(".transformation-reveal"),
+      sectionRef.current.querySelectorAll(".deploy-reveal"),
       { opacity: 0, y: 24, filter: "blur(4px)" },
       {
         opacity: 1,
@@ -65,31 +58,47 @@ export default function Process() {
   }, []);
 
   return (
-    <section id="results" ref={sectionRef} className="section relative overflow-hidden">
+    <section id="results" ref={sectionRef} className="section deployment-command-section relative overflow-hidden">
       <div className="container relative z-10">
-        <div className="transformation-reveal max-w-3xl">
-          <div className="section-eyebrow mb-4">DEPLOYMENT SEQUENCE</div>
-          <h2 className="section-title text-balance">From operational chaos to autonomous execution.</h2>
-          <p className="t-body mt-5">We design, integrate, and deploy AI systems directly into real business operations - without disrupting existing workflows.</p>
+        <div className="deploy-reveal max-w-3xl">
+          <div className="section-eyebrow mb-4">OPERATIONAL DEPLOYMENT</div>
+          <h2 className="section-title text-balance">Deploy AI systems directly into operational reality.</h2>
+          <p className="t-body mt-5">Narrative AI integrates directly into existing workflows, cloud systems, and operational pipelines - transforming repetitive coordination into intelligent execution layers.</p>
         </div>
 
-        <div className="transformation-reveal transformation-stack mt-12">
-          {STACK.map((step) => (
-            <article key={step.id} className="transformation-row">
-              <div className="transformation-index">{step.id}</div>
-              <div>
-                <div className="font-mono text-[9px] uppercase tracking-[0.22em] text-[var(--accent)]">{step.label}</div>
-                <h3 className="mt-2 font-serif text-[26px] leading-none text-white">{step.title}</h3>
+        <div className="deploy-reveal deployment-command">
+          <div className="command-topology" aria-hidden="true">
+            <div className="topology-spine" />
+            <div className="topology-signal topology-signal-a" />
+            <div className="topology-signal topology-signal-b" />
+          </div>
+
+          {PHASES.map((phase, index) => (
+            <article key={phase.id} className={`command-node command-node-${index + 1}`}>
+              <div className="command-node-head">
+                <span>{phase.id}</span>
+                <strong>{phase.state}</strong>
               </div>
-              <p className="t-body max-w-xl">{step.copy}</p>
+              <h3>{phase.label}</h3>
+              <p>{phase.copy}</p>
             </article>
           ))}
+
+          <div className="command-core">
+            <div className="core-ring" />
+            <div className="core-label">AI Operational Layer</div>
+            <div className="core-state">
+              <span className="pulse-dot" />
+              deployment active
+            </div>
+          </div>
         </div>
 
-        <div className="transformation-reveal metrics-bar mt-8">
-          {TRUST.map((item) => (
-            <div key={item} className="metrics-item">{item}</div>
-          ))}
+        <div className="deploy-reveal deployment-proofbar">
+          <span>Existing workflows preserved</span>
+          <span>Cloud systems connected</span>
+          <span>Autonomous execution controlled</span>
+          <span>Audit visibility retained</span>
         </div>
       </div>
     </section>
