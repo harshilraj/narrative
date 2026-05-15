@@ -66,15 +66,27 @@ export default function Process() {
           <p className="t-body mt-5">Narrative AI integrates directly into existing workflows, cloud systems, and operational pipelines - transforming repetitive coordination into intelligent execution layers.</p>
         </div>
 
-        <div className="deploy-reveal deployment-command">
-          <div className="command-topology" aria-hidden="true">
-            <div className="topology-spine" />
-            <div className="topology-signal topology-signal-a" />
-            <div className="topology-signal topology-signal-b" />
+        <div className="deploy-reveal deployment-command" aria-label="Deployment pipeline">
+          <div className="deployment-status-panel" aria-hidden="true">
+            <div>
+              <span>deployment state</span>
+              <strong>controlled rollout</strong>
+            </div>
+            <div>
+              <span>governance</span>
+              <strong>audit ready</strong>
+            </div>
+            <div className="deployment-live-indicator">
+              <span className="pulse-dot" />
+              signal stable
+            </div>
           </div>
 
           {PHASES.map((phase, index) => (
             <article key={phase.id} className={`command-node command-node-${index + 1}`}>
+              <div className="command-connector" aria-hidden="true">
+                <span />
+              </div>
               <div className="command-node-head">
                 <span>{phase.id}</span>
                 <strong>{phase.state}</strong>
@@ -83,15 +95,6 @@ export default function Process() {
               <p>{phase.copy}</p>
             </article>
           ))}
-
-          <div className="command-core">
-            <div className="core-ring" />
-            <div className="core-label">AI Operational Layer</div>
-            <div className="core-state">
-              <span className="pulse-dot" />
-              deployment active
-            </div>
-          </div>
         </div>
 
         <div className="deploy-reveal deployment-proofbar">

@@ -33,6 +33,11 @@ export default function EnterpriseTrust() {
               <div className="section-eyebrow mb-5">PRODUCTION RELIABILITY</div>
               <h3>Built for operational environments where failure is expensive.</h3>
               <p>Narrative AI systems are designed for production reliability, audit visibility, cloud-native deployment, and controlled autonomous execution - not prototype demos or isolated automations.</p>
+              <div className="enterprise-feature-points">
+                <span>Governed autonomy</span>
+                <span>Cloud-native delivery</span>
+                <span>Observable operations</span>
+              </div>
             </div>
 
             <div className="enterprise-telemetry" aria-hidden="true">

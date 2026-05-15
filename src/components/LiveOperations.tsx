@@ -60,7 +60,7 @@ export default function LiveOperations() {
           <p className="t-body mt-5">Narrative turns fragmented work into a connected execution loop: signals become context, context becomes action, and every action remains observable.</p>
         </div>
 
-        <div className="flow-reveal orchestration-flow">
+        <div className="flow-reveal orchestration-flow" aria-label="Operational build flow">
           <div className="flow-backplane" aria-hidden="true">
             <div className="flow-line" />
             <div className="flow-pulse-runner" />
@@ -73,7 +73,7 @@ export default function LiveOperations() {
               </div>
               <div className="flow-stage-content">
                 <div className="font-mono text-[9px] uppercase tracking-[0.24em] text-[var(--accent)]">{stage.label}</div>
-                <h3 className="mt-3 font-serif text-[30px] leading-none text-white">{stage.title}</h3>
+                <h3>{stage.title}</h3>
                 <p className="t-body mt-4">{stage.copy}</p>
                 <div className="mt-6 flex flex-wrap gap-2">
                   {stage.meta.map((item) => (
