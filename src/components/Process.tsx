@@ -98,9 +98,18 @@ export default function Process() {
             <div className="deployment-atmosphere" aria-hidden="true" />
             <div className="deployment-rail" aria-hidden="true">
               <svg viewBox="0 0 420 760" preserveAspectRatio="none">
-                <path className="deployment-route-base" d="M202 34 C178 126 258 169 214 262 C170 356 238 401 205 493 C176 574 228 629 202 726" />
-                <path className="deployment-route-flow" d="M202 34 C178 126 258 169 214 262 C170 356 238 401 205 493 C176 574 228 629 202 726" />
+                <path className="deployment-route-base" d="M210 380 L86 118" />
+                <path className="deployment-route-base" d="M210 380 L332 160" />
+                <path className="deployment-route-base" d="M210 380 L88 388" />
+                <path className="deployment-route-base" d="M210 380 L335 430" />
+                <path className="deployment-route-base" d="M210 380 L210 650" />
+                <path className="deployment-route-flow" d="M86 118 C128 188 168 288 210 380 C254 474 232 570 210 650" />
               </svg>
+            </div>
+
+            <div className="deployment-system-core" aria-hidden="true">
+              <span>Execution Layer</span>
+              <strong>System Active</strong>
             </div>
 
             {PHASES.map((phase, index) => (
