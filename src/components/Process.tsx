@@ -7,42 +7,32 @@ gsap.registerPlugin(ScrollTrigger);
 const PHASES = [
   {
     id: "01",
-    label: "Discover",
-    title: "Map the operating surface",
-    copy: "Workflows, dependencies, policies, and failure points become one deployment graph.",
-    metric: "Signal baseline",
+    title: "Operational Mapping",
+    copy: "Analyze workflows, approvals, bottlenecks, systems, and operational dependencies.",
   },
   {
     id: "02",
-    label: "Design",
-    title: "Shape the intelligence layer",
-    copy: "Routing logic, model boundaries, review paths, and memory are engineered before rollout.",
-    metric: "Policy aligned",
+    title: "Intelligence Design",
+    copy: "Define orchestration logic, routing behavior, memory systems, and execution policies.",
   },
   {
     id: "03",
-    label: "Connect",
-    title: "Bind into live systems",
-    copy: "APIs, cloud services, CRMs, data pipelines, and teams connect without replacing the business.",
-    metric: "Systems linked",
+    title: "Infrastructure Integration",
+    copy: "Connect APIs, cloud systems, internal tooling, and operational data flows.",
   },
   {
     id: "04",
-    label: "Execute",
-    title: "Activate controlled autonomy",
-    copy: "Approved workflows begin routing decisions, triggering actions, and escalating exceptions.",
-    metric: "Execution live",
+    title: "Autonomous Execution",
+    copy: "Deploy AI-powered workflows capable of controlled decision routing and automated execution.",
   },
   {
     id: "05",
-    label: "Optimize",
-    title: "Continuously tune operations",
-    copy: "Reliability, latency, audit trails, and operational gains are monitored as the system evolves.",
-    metric: "Feedback loop",
+    title: "Continuous Optimization",
+    copy: "Monitor reliability, audit visibility, operational latency, and execution quality continuously.",
   },
 ];
 
-const SIGNALS = ["workflow intake", "policy memory", "cloud routing", "audit surface"];
+const SIGNALS = ["governed rollout", "audit visible", "systems stable"];
 
 export default function Process() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -70,15 +60,15 @@ export default function Process() {
         <div className="deploy-reveal deployment-experience" aria-label="Operational deployment system">
           <div className="deployment-narrative">
             <div className="section-eyebrow mb-4">OPERATIONAL DEPLOYMENT</div>
-            <h2 className="section-title text-balance">AI infrastructure activating across the work itself.</h2>
-            <p className="t-body mt-5">Narrative deploys intelligence into the systems teams already run, then keeps every autonomous action governed, observable, and ready to improve.</p>
+            <h2 className="section-title text-balance">Deployment that enters the business quietly.</h2>
+            <p className="t-body mt-5">Narrative moves from operational analysis to controlled autonomous execution without turning production systems into experiments.</p>
 
             <aside className="deployment-core" aria-label="Live deployment state">
               <div className="deployment-core-status">
                 <span className="pulse-dot" />
-                operational layer initialized
+                deployment state
               </div>
-              <h3>Controlled autonomy, live in production.</h3>
+              <h3>Production-ready. Observable. Governed from day one.</h3>
               <div className="deployment-core-signals">
                 {SIGNALS.map((signal) => (
                   <span key={signal}>{signal}</span>
@@ -94,34 +84,13 @@ export default function Process() {
             </div>
           </div>
 
-          <div className="deployment-journey" aria-label="Deployment journey">
-            <div className="deployment-atmosphere" aria-hidden="true" />
-            <div className="deployment-rail" aria-hidden="true">
-              <svg viewBox="0 0 420 760" preserveAspectRatio="none">
-                <path className="deployment-route-base" d="M210 380 L86 118" />
-                <path className="deployment-route-base" d="M210 380 L332 160" />
-                <path className="deployment-route-base" d="M210 380 L88 388" />
-                <path className="deployment-route-base" d="M210 380 L335 430" />
-                <path className="deployment-route-base" d="M210 380 L210 650" />
-                <path className="deployment-route-flow" d="M86 118 C128 188 168 288 210 380 C254 474 232 570 210 650" />
-              </svg>
-            </div>
-
-            <div className="deployment-system-core" aria-hidden="true">
-              <span>Execution Layer</span>
-              <strong>System Active</strong>
-            </div>
-
-            {PHASES.map((phase, index) => (
-              <article key={phase.id} className={`deployment-stage deployment-stage-${index + 1}`}>
-                <div className="deployment-stage-marker" aria-hidden="true">
-                  <span>{phase.id}</span>
-                </div>
-                <div className="deployment-stage-copy">
-                  <div className="deployment-stage-label">{phase.label}</div>
+          <div className="deployment-sequence" aria-label="Deployment sequence">
+            {PHASES.map((phase) => (
+              <article key={phase.id} className="deployment-step">
+                <div className="deployment-step-index">{phase.id}</div>
+                <div className="deployment-step-copy">
                   <h3>{phase.title}</h3>
                   <p>{phase.copy}</p>
-                  <strong>{phase.metric}</strong>
                 </div>
               </article>
             ))}
