@@ -20,9 +20,9 @@ export default function Home() {
     <SmoothScroll>
       {loading && <Loader onComplete={() => setLoading(false)} />}
       <GlobalEnvironment />
-      <main className="relative z-10" style={{ background: "transparent", opacity: loading ? 0 : 1, transition: "opacity 1s ease" }}>
+      <main className={`site-shell relative z-10 ${loading ? "" : "site-shell-ready"}`} style={{ background: "transparent" }}>
         <Nav />
-        <Hero />
+        <Hero initialized={!loading} />
         <Capabilities />
         <LiveOperations />
         <Process />

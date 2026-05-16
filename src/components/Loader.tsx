@@ -22,6 +22,8 @@ export default function Loader({ onComplete }: { onComplete: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const veilRef = useRef<HTMLDivElement>(null);
+  const completedRef = useRef(false);
   const [isDone, setIsDone] = useState(false);
 
   useEffect(() => {
@@ -114,18 +116,26 @@ export default function Loader({ onComplete }: { onComplete: () => void }) {
 
     render();
 
+    const signalComplete = () => {
+      if (completedRef.current) return;
+      completedRef.current = true;
+      onComplete();
+    };
+
     const tl = gsap.timeline({
       onComplete: () => {
         setIsDone(true);
-        onComplete();
       },
     });
 
     tl.fromTo(panelRef.current, { opacity: 0, y: 18, filter: "blur(10px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.85, ease: "power3.out", delay: 0.15 })
       .to(".loader-status-line", { opacity: 1, x: 0, duration: 0.35, stagger: 0.12, ease: "power2.out" }, "-=0.15")
       .to(".loader-progress-fill", { scaleX: 1, duration: 1.35, ease: "power2.inOut" }, "-=0.25")
-      .to(panelRef.current, { opacity: 0, y: -10, filter: "blur(8px)", duration: 0.55, ease: "power2.inOut", delay: 0.25 })
-      .to(containerRef.current, { opacity: 0, duration: 0.7, ease: "power2.inOut" }, "-=0.2");
+      .to(".loader-stabilizer", { opacity: 1, scaleX: 1, duration: 0.55, stagger: 0.08, ease: "power3.out" }, "-=0.35")
+      .add(signalComplete, "+=0.05")
+      .to(panelRef.current, { opacity: 0, y: -8, filter: "blur(8px)", duration: 0.7, ease: "power2.inOut" }, "+=0.12")
+      .to(veilRef.current, { opacity: 0.18, duration: 0.75, ease: "power2.out" }, "-=0.58")
+      .to(containerRef.current, { opacity: 0, duration: 0.82, ease: "power2.inOut" }, "-=0.3");
 
     return () => {
       window.removeEventListener("resize", resize);
@@ -139,11 +149,16 @@ export default function Loader({ onComplete }: { onComplete: () => void }) {
   return (
     <div ref={containerRef} className="fixed inset-0 z-[100] overflow-hidden bg-[#02010f]">
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(2,1,15,0.38)_54%,rgba(2,1,15,0.92)_100%)]" />
+      <div ref={veilRef} className="loader-veil absolute inset-0" />
 
       <div ref={panelRef} className="loader-console">
         <div className="loader-kicker">Narrative AI</div>
         <h1>Operational Layer Online</h1>
+        <div className="loader-stabilizers" aria-hidden="true">
+          <span className="loader-stabilizer" />
+          <span className="loader-stabilizer" />
+          <span className="loader-stabilizer" />
+        </div>
         <div className="loader-status">
           {BOOT_LINES.map((line) => (
             <div key={line} className="loader-status-line">

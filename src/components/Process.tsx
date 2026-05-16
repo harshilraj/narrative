@@ -7,35 +7,42 @@ gsap.registerPlugin(ScrollTrigger);
 const PHASES = [
   {
     id: "01",
-    label: "Operational Mapping",
-    state: "DISCOVER",
-    copy: "Analyze workflows, bottlenecks, approvals, systems, and cloud infrastructure.",
+    label: "Discover",
+    title: "Map the operating surface",
+    copy: "Workflows, dependencies, policies, and failure points become one deployment graph.",
+    metric: "Signal baseline",
   },
   {
     id: "02",
-    label: "Intelligence Architecture",
-    state: "DESIGN",
-    copy: "Design orchestration logic, AI routing, memory systems, and execution layers.",
+    label: "Design",
+    title: "Shape the intelligence layer",
+    copy: "Routing logic, model boundaries, review paths, and memory are engineered before rollout.",
+    metric: "Policy aligned",
   },
   {
     id: "03",
-    label: "Systems Integration",
-    state: "CONNECT",
-    copy: "Connect APIs, CRMs, cloud environments, data pipelines, and operational tooling.",
+    label: "Connect",
+    title: "Bind into live systems",
+    copy: "APIs, cloud services, CRMs, data pipelines, and teams connect without replacing the business.",
+    metric: "Systems linked",
   },
   {
     id: "04",
-    label: "Autonomous Execution",
-    state: "EXECUTE",
-    copy: "Deploy AI-powered workflows capable of routing, triggering, and executing decisions automatically.",
+    label: "Execute",
+    title: "Activate controlled autonomy",
+    copy: "Approved workflows begin routing decisions, triggering actions, and escalating exceptions.",
+    metric: "Execution live",
   },
   {
     id: "05",
-    label: "Monitoring + Optimization",
-    state: "OBSERVE",
-    copy: "Track reliability, audit visibility, latency, system health, and operational efficiency continuously.",
+    label: "Optimize",
+    title: "Continuously tune operations",
+    copy: "Reliability, latency, audit trails, and operational gains are monitored as the system evolves.",
+    metric: "Feedback loop",
   },
 ];
+
+const SIGNALS = ["workflow intake", "policy memory", "cloud routing", "audit surface"];
 
 export default function Process() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -60,48 +67,54 @@ export default function Process() {
   return (
     <section id="results" ref={sectionRef} className="section deployment-command-section relative overflow-hidden">
       <div className="container relative z-10">
-        <div className="deploy-reveal max-w-3xl">
+        <div className="deploy-reveal deployment-heading">
           <div className="section-eyebrow mb-4">OPERATIONAL DEPLOYMENT</div>
-          <h2 className="section-title text-balance">Deploy AI systems directly into operational reality.</h2>
-          <p className="t-body mt-5">Narrative AI integrates directly into existing workflows, cloud systems, and operational pipelines - transforming repetitive coordination into intelligent execution layers.</p>
+          <h2 className="section-title text-balance">AI infrastructure activating across the work itself.</h2>
+          <p className="t-body mt-5">Narrative deploys intelligence into the systems teams already run, then keeps every autonomous action governed, observable, and ready to improve.</p>
         </div>
 
-        <div className="deploy-reveal deployment-command" aria-label="Deployment pipeline">
-          <div className="deployment-status-panel" aria-hidden="true">
-            <div>
-              <span>deployment state</span>
-              <strong>controlled rollout</strong>
-            </div>
-            <div>
-              <span>governance</span>
-              <strong>audit ready</strong>
-            </div>
-            <div className="deployment-live-indicator">
-              <span className="pulse-dot" />
-              signal stable
-            </div>
+        <div className="deploy-reveal deployment-journey" aria-label="Deployment journey">
+          <div className="deployment-atmosphere" aria-hidden="true" />
+          <div className="deployment-rail" aria-hidden="true">
+            <svg viewBox="0 0 1000 360" preserveAspectRatio="none">
+              <path className="deployment-route-base" d="M36 254 C180 76 312 318 450 170 C578 34 672 244 798 142 C884 74 930 104 964 78" />
+              <path className="deployment-route-flow" d="M36 254 C180 76 312 318 450 170 C578 34 672 244 798 142 C884 74 930 104 964 78" />
+            </svg>
           </div>
 
           {PHASES.map((phase, index) => (
-            <article key={phase.id} className={`command-node command-node-${index + 1}`}>
-              <div className="command-connector" aria-hidden="true">
-                <span />
-              </div>
-              <div className="command-node-head">
+            <article key={phase.id} className={`deployment-stage deployment-stage-${index + 1}`}>
+              <div className="deployment-stage-marker" aria-hidden="true">
                 <span>{phase.id}</span>
-                <strong>{phase.state}</strong>
               </div>
-              <h3>{phase.label}</h3>
-              <p>{phase.copy}</p>
+              <div className="deployment-stage-copy">
+                <div className="deployment-stage-label">{phase.label}</div>
+                <h3>{phase.title}</h3>
+                <p>{phase.copy}</p>
+                <strong>{phase.metric}</strong>
+              </div>
             </article>
           ))}
+
+          <aside className="deployment-core" aria-label="Live deployment state">
+            <div className="deployment-core-status">
+              <span className="pulse-dot" />
+              operational layer initialized
+            </div>
+            <h3>Controlled autonomy, live in production.</h3>
+            <div className="deployment-core-signals">
+              {SIGNALS.map((signal) => (
+                <span key={signal}>{signal}</span>
+              ))}
+            </div>
+          </aside>
         </div>
 
-        <div className="deploy-reveal deployment-proofbar">
-          <span>Existing workflows preserved</span>
-          <span>Cloud systems connected</span>
-          <span>Autonomous execution controlled</span>
-          <span>Audit visibility retained</span>
+        <div className="deploy-reveal deployment-proofbar deployment-proofbar-refined">
+          <span>Workflows preserved</span>
+          <span>Systems connected</span>
+          <span>Autonomy governed</span>
+          <span>Audit always visible</span>
         </div>
       </div>
     </section>

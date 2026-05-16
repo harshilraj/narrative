@@ -2,20 +2,22 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 
-export default function Hero() {
+export default function Hero({ initialized }: { initialized: boolean }) {
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!contentRef.current) return;
+    if (!contentRef.current || !initialized) return;
     const els = contentRef.current.querySelectorAll("[data-reveal]");
-    gsap.fromTo(els,
-      { opacity: 0, y: 20, filter: "blur(6px)" },
-      { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.0, stagger: 0.1, ease: "power3.out", delay: 0.2 }
+    gsap.killTweensOf(els);
+    gsap.fromTo(
+      els,
+      { opacity: 0, y: 18, filter: "blur(8px)" },
+      { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.15, stagger: 0.12, ease: "power3.out", delay: 0.08 }
     );
-  }, []);
+  }, [initialized]);
 
   return (
-    <section className="relative w-full min-h-[92vh] md:min-h-screen flex flex-col justify-center overflow-hidden bg-transparent">
+    <section className={`hero-section relative w-full min-h-[92vh] md:min-h-screen flex flex-col justify-center overflow-hidden bg-transparent ${initialized ? "hero-initialized" : ""}`}>
       
       {/* Soft atmospheric integration */}
       <div className="absolute inset-0 z-0 pointer-events-none"
@@ -23,7 +25,7 @@ export default function Hero() {
       <div className="absolute bottom-0 left-0 right-0 h-64 z-0 pointer-events-none"
         style={{ background: "linear-gradient(to bottom, transparent, transparent)" }} />
 
-      <div className="container relative z-20 flex flex-col items-center justify-center text-center px-4" ref={contentRef}>
+      <div className="container relative z-20 flex flex-col items-center justify-center text-center px-4 hero-content" ref={contentRef}>
         
         {/* Center Content */}
         <div className="flex flex-col items-center max-w-5xl mt-20 md:mt-28">
