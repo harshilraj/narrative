@@ -67,54 +67,56 @@ export default function Process() {
   return (
     <section id="results" ref={sectionRef} className="section deployment-command-section relative overflow-hidden">
       <div className="container relative z-10">
-        <div className="deploy-reveal deployment-heading">
-          <div className="section-eyebrow mb-4">OPERATIONAL DEPLOYMENT</div>
-          <h2 className="section-title text-balance">AI infrastructure activating across the work itself.</h2>
-          <p className="t-body mt-5">Narrative deploys intelligence into the systems teams already run, then keeps every autonomous action governed, observable, and ready to improve.</p>
-        </div>
+        <div className="deploy-reveal deployment-experience" aria-label="Operational deployment system">
+          <div className="deployment-narrative">
+            <div className="section-eyebrow mb-4">OPERATIONAL DEPLOYMENT</div>
+            <h2 className="section-title text-balance">AI infrastructure activating across the work itself.</h2>
+            <p className="t-body mt-5">Narrative deploys intelligence into the systems teams already run, then keeps every autonomous action governed, observable, and ready to improve.</p>
 
-        <div className="deploy-reveal deployment-journey" aria-label="Deployment journey">
-          <div className="deployment-atmosphere" aria-hidden="true" />
-          <div className="deployment-rail" aria-hidden="true">
-            <svg viewBox="0 0 1000 360" preserveAspectRatio="none">
-              <path className="deployment-route-base" d="M36 254 C180 76 312 318 450 170 C578 34 672 244 798 142 C884 74 930 104 964 78" />
-              <path className="deployment-route-flow" d="M36 254 C180 76 312 318 450 170 C578 34 672 244 798 142 C884 74 930 104 964 78" />
-            </svg>
+            <aside className="deployment-core" aria-label="Live deployment state">
+              <div className="deployment-core-status">
+                <span className="pulse-dot" />
+                operational layer initialized
+              </div>
+              <h3>Controlled autonomy, live in production.</h3>
+              <div className="deployment-core-signals">
+                {SIGNALS.map((signal) => (
+                  <span key={signal}>{signal}</span>
+                ))}
+              </div>
+            </aside>
+
+            <div className="deployment-proofbar deployment-proofbar-refined">
+              <span>Workflows preserved</span>
+              <span>Systems connected</span>
+              <span>Autonomy governed</span>
+              <span>Audit always visible</span>
+            </div>
           </div>
 
-          {PHASES.map((phase, index) => (
-            <article key={phase.id} className={`deployment-stage deployment-stage-${index + 1}`}>
-              <div className="deployment-stage-marker" aria-hidden="true">
-                <span>{phase.id}</span>
-              </div>
-              <div className="deployment-stage-copy">
-                <div className="deployment-stage-label">{phase.label}</div>
-                <h3>{phase.title}</h3>
-                <p>{phase.copy}</p>
-                <strong>{phase.metric}</strong>
-              </div>
-            </article>
-          ))}
-
-          <aside className="deployment-core" aria-label="Live deployment state">
-            <div className="deployment-core-status">
-              <span className="pulse-dot" />
-              operational layer initialized
+          <div className="deployment-journey" aria-label="Deployment journey">
+            <div className="deployment-atmosphere" aria-hidden="true" />
+            <div className="deployment-rail" aria-hidden="true">
+              <svg viewBox="0 0 420 760" preserveAspectRatio="none">
+                <path className="deployment-route-base" d="M202 34 C178 126 258 169 214 262 C170 356 238 401 205 493 C176 574 228 629 202 726" />
+                <path className="deployment-route-flow" d="M202 34 C178 126 258 169 214 262 C170 356 238 401 205 493 C176 574 228 629 202 726" />
+              </svg>
             </div>
-            <h3>Controlled autonomy, live in production.</h3>
-            <div className="deployment-core-signals">
-              {SIGNALS.map((signal) => (
-                <span key={signal}>{signal}</span>
-              ))}
-            </div>
-          </aside>
-        </div>
 
-        <div className="deploy-reveal deployment-proofbar deployment-proofbar-refined">
-          <span>Workflows preserved</span>
-          <span>Systems connected</span>
-          <span>Autonomy governed</span>
-          <span>Audit always visible</span>
+            {PHASES.map((phase, index) => (
+              <article key={phase.id} className={`deployment-stage deployment-stage-${index + 1}`}>
+                <div className="deployment-stage-marker" aria-hidden="true">
+                  <span>{phase.id}</span>
+                </div>
+                <div className="deployment-stage-copy">
+                  <div className="deployment-stage-label">{phase.label}</div>
+                  <h3>{phase.title}</h3>
+                  <p>{phase.copy}</p>
+                  <strong>{phase.metric}</strong>
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
       </div>
     </section>

@@ -2229,6 +2229,202 @@ body {
   }
 }
 
+/* Deployment desktop rebuild */
+.deployment-experience {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(360px, 0.82fr) minmax(520px, 1.18fr);
+  gap: clamp(48px, 6vw, 92px);
+  align-items: center;
+  margin-top: 8px;
+}
+
+.deployment-narrative {
+  position: relative;
+  z-index: 3;
+}
+
+.deployment-narrative .section-title {
+  max-width: 11.6ch;
+  font-size: clamp(3.25rem, 5.1vw, 4.85rem);
+  line-height: 0.98;
+}
+
+.deployment-narrative .t-body {
+  max-width: 500px;
+  margin-top: 28px;
+}
+
+.deployment-narrative .deployment-core {
+  margin-top: 42px;
+}
+
+.deployment-experience .deployment-proofbar {
+  margin-top: 18px;
+}
+
+@media (min-width: 901px) {
+  .deployment-command-section {
+    padding: 112px 0;
+    background:
+      radial-gradient(ellipse at 78% 44%, rgba(169,159,255,0.1), transparent 50%),
+      radial-gradient(ellipse at 18% 70%, rgba(70,145,255,0.045), transparent 44%),
+      linear-gradient(180deg, rgba(3,2,16,0.54), rgba(2,1,15,0.78));
+  }
+
+  .deployment-experience .deployment-journey {
+    display: block;
+    min-height: 780px;
+    margin-top: 0;
+    padding: 0;
+    overflow: visible;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .deployment-experience .deployment-journey::before {
+    inset: 6% 8% 5% 22%;
+    border: 1px solid rgba(169,159,255,0.08);
+    border-radius: 999px;
+    opacity: 0.7;
+  }
+
+  .deployment-experience .deployment-atmosphere {
+    inset: 12% 4% 12% 12%;
+    background:
+      radial-gradient(circle at 44% 50%, rgba(169,159,255,0.16), transparent 34%),
+      radial-gradient(circle at 76% 24%, rgba(255,255,255,0.052), transparent 28%);
+    filter: blur(38px);
+    opacity: 0.5;
+  }
+
+  .deployment-experience .deployment-rail {
+    inset: 34px 14% 34px 18%;
+    opacity: 0.72;
+  }
+
+  .deployment-experience .deployment-route-base {
+    stroke: rgba(169,159,255,0.18);
+    stroke-width: 1.1;
+  }
+
+  .deployment-experience .deployment-route-flow {
+    stroke-width: 1.35;
+    stroke-dasharray: 70 560;
+    animation-duration: 8.8s;
+  }
+
+  .deployment-experience .deployment-stage {
+    position: absolute;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 18px;
+    width: min(360px, 48%);
+    min-width: 0;
+  }
+
+  .deployment-experience .deployment-stage-1 {
+    left: 2%;
+    top: 4%;
+  }
+
+  .deployment-experience .deployment-stage-2 {
+    right: 5%;
+    top: 18%;
+  }
+
+  .deployment-experience .deployment-stage-3 {
+    left: 8%;
+    top: 38%;
+    margin-left: 0;
+  }
+
+  .deployment-experience .deployment-stage-4 {
+    right: 0;
+    top: 56%;
+  }
+
+  .deployment-experience .deployment-stage-5 {
+    left: 18%;
+    bottom: 2%;
+    max-width: none;
+  }
+
+  .deployment-experience .deployment-stage-marker {
+    width: 54px;
+    height: 54px;
+    margin-top: 4px;
+  }
+
+  .deployment-experience .deployment-stage-copy {
+    margin-top: 0;
+    border-color: rgba(255,255,255,0.07);
+    border-radius: 14px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.04), transparent 48%),
+      rgba(5,4,18,0.66);
+    padding: 19px 20px;
+  }
+
+  .deployment-experience .deployment-stage h3 {
+    max-width: 280px;
+    font-size: clamp(1.45rem, 1.7vw, 1.9rem);
+    line-height: 1.02;
+  }
+
+  .deployment-experience .deployment-stage p {
+    max-width: 300px;
+    font-size: 10.5px;
+    line-height: 1.65;
+  }
+
+  .deployment-experience .deployment-core {
+    width: min(520px, 100%);
+    padding: 30px;
+    border-radius: 18px;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(169,159,255,0.13), transparent 48%),
+      rgba(4,3,17,0.76);
+  }
+
+  .deployment-experience .deployment-proofbar-refined {
+    width: min(520px, 100%);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-radius: 14px;
+  }
+
+  .deployment-experience .deployment-proofbar span {
+    min-height: 54px;
+    justify-content: flex-start;
+    padding: 14px 16px;
+    text-align: left;
+    font-size: 8.5px;
+  }
+}
+
+@media (max-width: 900px) {
+  .deployment-experience {
+    display: block;
+    margin-top: 0;
+  }
+
+  .deployment-narrative .section-title {
+    max-width: none;
+    font-size: clamp(2.35rem, 10vw, 3.05rem);
+    line-height: 1.02;
+  }
+
+  .deployment-narrative .deployment-core {
+    margin-top: 30px;
+  }
+
+  .deployment-narrative .deployment-proofbar {
+    grid-template-columns: 1fr;
+    margin-bottom: 24px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
